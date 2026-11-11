@@ -1,0 +1,133 @@
+<UserControl x:Class="NetConfigPro.Views.CompareView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Grid Margin="22,18">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="2*" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="3*" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Margin="0,0,0,14">
+            <TextBlock Text="配置对比" FontSize="19" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" />
+            <TextBlock Text="左右两侧载入两份配置，逐行比对差异（绿色为右侧新增，红色为左侧独有）"
+                       FontSize="12" Foreground="{StaticResource TextDimBrush}" Margin="0,5,0,0" />
+        </StackPanel>
+
+        <Border Grid.Row="1" Padding="12,10" Margin="0,0,0,12" CornerRadius="6"
+                Background="{StaticResource PanelBgBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
+            <Grid>
+                <TextBlock x:Name="TxtStat" Text="差异统计：—" VerticalAlignment="Center" FontSize="12.5"
+                           Foreground="{StaticResource TextPrimaryBrush}" />
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <CheckBox x:Name="ChkOnlyDiff" Content="仅显示差异" Margin="0,0,14,0" Checked="ChkOnlyDiff_Changed" Unchecked="ChkOnlyDiff_Changed" />
+                    <Button Content="开始对比" Style="{StaticResource PrimaryButton}" Click="BtnCompare_Click" />
+                    <Button Content="交换左右" Margin="8,0,0,0" Click="BtnSwap_Click" />
+                    <Button Content="清空" Margin="6,0,0,0" Click="BtnClear_Click" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0" Margin="0,0,8,0" Background="{StaticResource PanelBgBrush}"
+                    BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <Border Padding="12,8" Background="{StaticResource PanelBg2Brush}" CornerRadius="6,6,0,0"
+                            BorderThickness="0,0,0,1" BorderBrush="{StaticResource BorderBrush}">
+                        <Grid>
+                            <TextBlock Text="基准配置（左）" FontWeight="SemiBold" FontSize="12.5"
+                                       Foreground="{StaticResource AccentCyanBrush}" />
+                            <ComboBox x:Name="CmbLeft" Width="190" HorizontalAlignment="Right"
+                                      SelectionChanged="CmbLeft_SelectionChanged" ToolTip="从版本库载入" />
+                        </Grid>
+                    </Border>
+                    <TextBox x:Name="TxtLeft" Grid.Row="1" AcceptsReturn="True" TextWrapping="NoWrap"
+                             FontFamily="{StaticResource MonoFont}" FontSize="12.5" Padding="10,8"
+                             Background="{StaticResource OutputBgBrush}" BorderThickness="0"
+                             VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" />
+                </Grid>
+            </Border>
+
+            <Border Grid.Column="1" Margin="8,0,0,0" Background="{StaticResource PanelBgBrush}"
+                    BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <Border Padding="12,8" Background="{StaticResource PanelBg2Brush}" CornerRadius="6,6,0,0"
+                            BorderThickness="0,0,0,1" BorderBrush="{StaticResource BorderBrush}">
+                        <Grid>
+                            <TextBlock Text="对比配置（右）" FontWeight="SemiBold" FontSize="12.5"
+                                       Foreground="{StaticResource AccentPurpleBrush}" />
+                            <ComboBox x:Name="CmbRight" Width="190" HorizontalAlignment="Right"
+                                      SelectionChanged="CmbRight_SelectionChanged" ToolTip="从版本库载入" />
+                        </Grid>
+                    </Border>
+                    <TextBox x:Name="TxtRight" Grid.Row="1" AcceptsReturn="True" TextWrapping="NoWrap"
+                             FontFamily="{StaticResource MonoFont}" FontSize="12.5" Padding="10,8"
+                             Background="{StaticResource OutputBgBrush}" BorderThickness="0"
+                             VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" />
+                </Grid>
+            </Border>
+        </Grid>
+
+        <Border Grid.Row="3" Padding="4,10,4,8">
+            <TextBlock Text="对比结果" FontWeight="SemiBold" FontSize="13" Foreground="{StaticResource AccentCyanBrush}" />
+        </Border>
+
+        <ListBox x:Name="ListDiff" Grid.Row="4" Background="{StaticResource OutputBgBrush}" BorderBrush="{StaticResource BorderBrush}"
+                 BorderThickness="1" Padding="2" VirtualizingStackPanel.IsVirtualizing="True">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <Grid Margin="0,1">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="42" />
+                            <ColumnDefinition Width="42" />
+                            <ColumnDefinition Width="22" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="{Binding LeftNo}" Foreground="#FF6B7D96" FontSize="11"
+                                   TextAlignment="Right" Padding="0,0,8,0" FontFamily="{StaticResource MonoFont}" />
+                        <TextBlock Grid.Column="1" Text="{Binding RightNo}" Foreground="#FF6B7D96" FontSize="11"
+                                   TextAlignment="Right" Padding="0,0,8,0" FontFamily="{StaticResource MonoFont}" />
+                        <TextBlock Grid.Column="2" Text="{Binding Marker}" FontWeight="Bold" FontSize="12"
+                                   FontFamily="{StaticResource MonoFont}" />
+                        <TextBlock Grid.Column="3" Text="{Binding Text}" FontFamily="{StaticResource MonoFont}"
+                                   FontSize="12.5" Padding="8,0,0,0" />
+                    </Grid>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+            <ListBox.ItemContainerStyle>
+                <Style TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
+                    <Setter Property="Padding" Value="8,1" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding Kind}" Value="Added">
+                            <Setter Property="Background" Value="#FFE4F6EC" />
+                            <Setter Property="Foreground" Value="#FF0C7A54" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding Kind}" Value="Removed">
+                            <Setter Property="Background" Value="#FFFBE9EC" />
+                            <Setter Property="Foreground" Value="#FFC22B3A" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding Kind}" Value="Same">
+                            <Setter Property="Foreground" Value="#FF6B7D96" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </ListBox.ItemContainerStyle>
+        </ListBox>
+    </Grid>
+</UserControl>

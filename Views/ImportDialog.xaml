@@ -1,0 +1,91 @@
+<Window x:Class="NetConfigPro.Views.ImportDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
+        Title="导入现网配置" Height="620" Width="840" WindowStartupLocation="CenterOwner"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent" ResizeMode="CanResize">
+
+    <shell:WindowChrome.WindowChrome>
+        <shell:WindowChrome CaptionHeight="40" ResizeBorderThickness="4" GlassFrameThickness="0" CornerRadius="8" />
+    </shell:WindowChrome.WindowChrome>
+
+    <Border Background="{StaticResource PanelBgBrush}" BorderBrush="{StaticResource AccentCyanBrush}"
+            BorderThickness="1" CornerRadius="8">
+        <Border.Effect>
+            <DropShadowEffect Color="#FF26415E" BlurRadius="16" ShadowDepth="0" Opacity="0.22" />
+        </Border.Effect>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="40" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <Border Grid.Row="0" Background="{StaticResource PanelBg2Brush}" CornerRadius="8,8,0,0"
+                    BorderThickness="0,0,0,1" BorderBrush="{StaticResource BorderBrush}" Padding="16,0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="导入现网配置" FontSize="13.5" FontWeight="SemiBold"
+                                   Foreground="{StaticResource AccentCyanBrush}" />
+                        <TextBlock Text="粘贴设备导出的 running-config（display current-configuration / show running-config），自动识别厂商并回填核心参数"
+                                   FontSize="10.5" Foreground="{StaticResource TextDimBrush}" />
+                    </StackPanel>
+                    <Button Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center"
+                            Style="{StaticResource WinBtnClose}" Content="✕" Click="BtnClose_Click" />
+                </Grid>
+            </Border>
+
+            <Grid Grid.Row="1" Margin="16,10,16,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="160" />
+                </Grid.RowDefinitions>
+
+                <TextBox x:Name="TxtRaw" Grid.Row="0" AcceptsReturn="True" TextWrapping="NoWrap"
+                         FontFamily="{StaticResource MonoFont}" FontSize="11.5"
+                         Background="{StaticResource OutputBgBrush}" Padding="8,6"
+                         VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"
+                         ToolTip="粘贴配置全文。将覆盖当前表单中已识别到的同名参数（VLAN/静态路由为追加）" />
+
+                <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,10,0,10">
+                    <Button Content="从剪贴板粘贴" Style="{StaticResource IconButton}" Click="BtnPaste_Click" />
+                    <Button Content="识别并回填预览" Style="{StaticResource PrimaryButton}" Margin="10,0,0,0" Click="BtnAnalyze_Click"
+                            ToolTip="分析厂商并列出将回填/提示人工核对的内容（不真正改动，预览通过后点“应用”）" />
+                    <Button Content="载入示例" Style="{StaticResource IconButton}" Margin="10,0,0,0" Click="BtnSample_Click"
+                            ToolTip="粘贴一段华为交换机配置样例用于体验" />
+                    <TextBlock x:Name="TxtVendor" Text="" FontSize="12" FontWeight="SemiBold"
+                               Foreground="{StaticResource AccentGreenBrush}" VerticalAlignment="Center" Margin="16,0,0,0" />
+                </StackPanel>
+
+                <Border Grid.Row="2" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6"
+                        Background="{StaticResource BgBaseBrush}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <TextBlock Grid.Row="0" Text="识别结果（“已填”为将自动回填项，其余提示在页签内人工核对）"
+                                   FontSize="11" Foreground="{StaticResource TextDimBrush}" Padding="12,8" />
+                        <ListBox x:Name="ListNotes" Grid.Row="1" BorderThickness="0" Background="Transparent"
+                                 Padding="8,0,8,8" FontSize="12" />
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <Border Grid.Row="2" Padding="16,10,16,12">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <TextBlock x:Name="TxtHint" Text="识别为安全的预览——只有点“应用回填”才会改动表单"
+                               FontSize="10.5" Foreground="{StaticResource TextDimBrush}" VerticalAlignment="Center" Margin="0,0,14,0" />
+                    <Button Content="取消" Padding="18,7" Click="BtnClose_Click" />
+                    <Button x:Name="BtnApply" Content="应用回填到表单" Style="{StaticResource PrimaryButton}" Padding="18,7"
+                            Margin="10,0,0,0" IsEnabled="False" Click="BtnApply_Click" />
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Border>
+</Window>

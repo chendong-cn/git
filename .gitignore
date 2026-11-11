@@ -1,0 +1,67 @@
+# ============================================
+# NetConfigPro 版本控制忽略规则
+# 原则：跟踪源码与运行依赖，排除全部编译发布产物
+# ============================================
+
+# ---- 编译与发布产物 ----
+bin/
+obj/
+publish/
+publish_clean/
+dist/
+Output/
+Build/
+
+# ---- 历史版本与备份 ----
+releases_backup/
+_backup/
+*_backup/
+*.bak
+*.bak_*
+*.old
+
+# ---- Visual Studio / Rider ----
+.vs/
+.idea/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.userprefs
+
+# ---- NuGet ----
+packages/
+*.nupkg
+*.snupkg
+project.lock.json
+
+# ---- 运行时数据与本地配置（含设备密码，绝不能入库）----
+*.db
+*.sqlite
+*.sqlite3
+devices.json
+*.local.json
+AppData/
+
+# ---- 日志与转储 ----
+*.log
+*.dmp
+*.tmp
+*.cache
+
+# ---- 打包压缩 ----
+*.zip
+*.7z
+*.rar
+*.tar
+*.gz
+
+# ---- 操作系统 ----
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store
+
+# 说明：Assets/ 目录整体保留，
+# 其中 plink.exe 是 PuTTY 组件，程序执行 SSH 配置下发所必需，属源码级依赖。

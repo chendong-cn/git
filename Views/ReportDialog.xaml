@@ -1,0 +1,109 @@
+<Window x:Class="NetConfigPro.Views.ReportDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
+        Title="生成检查报告" Height="720" Width="980" WindowStartupLocation="CenterOwner"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent" ResizeMode="CanResize">
+
+    <shell:WindowChrome.WindowChrome>
+        <shell:WindowChrome CaptionHeight="40" ResizeBorderThickness="4" GlassFrameThickness="0" CornerRadius="8" />
+    </shell:WindowChrome.WindowChrome>
+
+    <Border Background="{StaticResource PanelBgBrush}" BorderBrush="{StaticResource AccentCyanBrush}"
+            BorderThickness="1" CornerRadius="8">
+        <Border.Effect>
+            <DropShadowEffect Color="#FF26415E" BlurRadius="16" ShadowDepth="0" Opacity="0.22" />
+        </Border.Effect>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="40" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <Border Grid.Row="0" Background="{StaticResource PanelBg2Brush}" CornerRadius="8,8,0,0"
+                    BorderThickness="0,0,0,1" BorderBrush="{StaticResource BorderBrush}" Padding="16,0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="检查报告生成" FontSize="13.5" FontWeight="SemiBold"
+                                   Foreground="{StaticResource AccentCyanBrush}" />
+                        <TextBlock Text="把巡检/诊断命令的终端输出粘贴到下方，自动提取疑似问题并生成可直接发给客户的 HTML 报告"
+                                   FontSize="10.5" Foreground="{StaticResource TextDimBrush}" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center"
+                                shell:WindowChrome.IsHitTestVisibleInChrome="True">
+                        <Button Style="{StaticResource WinBtn}" Content="—" Click="BtnMin_Click" ToolTip="最小化" />
+                        <Button Style="{StaticResource WinBtnClose}" Content="✕" Click="BtnClose_Click" ToolTip="关闭" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <Grid Grid.Row="1" Margin="14,10,14,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="180" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,8">
+                    <TextBlock Text="报告标题" FontSize="11" Foreground="{StaticResource TextDimBrush}" VerticalAlignment="Center" />
+                    <TextBox x:Name="TxtTitle" Width="280" Margin="10,0,0,0" Padding="6,4" Text="网络设备巡检报告" />
+                    <TextBlock Text="设备信息" FontSize="11" Foreground="{StaticResource TextDimBrush}" Margin="16,0,0,0" VerticalAlignment="Center" />
+                    <TextBox x:Name="TxtMeta" Width="360" Margin="10,0,0,0" Padding="6,4" ToolTip="如：华为 S5720 核心交换机 · 192.168.1.1" />
+                    <Button Content="载入当前结果" Style="{StaticResource IconButton}" Margin="12,0,0,0" Click="BtnLoad_Click"
+                            ToolTip="把「网络命令」页本机执行的结果带过来" />
+                </StackPanel>
+
+                <TextBox x:Name="TxtRaw" Grid.Row="1" AcceptsReturn="True" TextWrapping="NoWrap"
+                         FontFamily="{StaticResource MonoFont}" FontSize="11.5"
+                         Background="{StaticResource OutputBgBrush}" Padding="8,6"
+                         VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"
+                         ToolTip="粘贴终端输出（可含多条命令的返回）" />
+
+                <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,10,0,10">
+                    <Button Content="分析并生成报告" Style="{StaticResource PrimaryButton}" Click="BtnBuild_Click" />
+                    <Button x:Name="BtnExport" Content="导出 HTML 报告" Style="{StaticResource IconButton}" Margin="8,0,0,0" Click="BtnExport_Click"
+                            IsEnabled="False" ToolTip="保存单文件 HTML，双击即可用浏览器打开、可发给客户" />
+                    <Button Content="导出 Markdown 摘要" Style="{StaticResource IconButton}" Margin="6,0,0,0" Click="BtnExportMd_Click"
+                            IsEnabled="False" x:Name="BtnExportMd" />
+                    <TextBlock x:Name="TxtAnalyze" Text="" FontSize="11" Foreground="{StaticResource TextDimBrush}"
+                               VerticalAlignment="Center" Margin="14,0,0,0" />
+                </StackPanel>
+
+                <Border Grid.Row="3" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6"
+                        Background="{StaticResource BgBaseBrush}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="150" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <TextBlock Grid.Row="0" x:Name="TxtPreviewTitle" Text="报告预览"
+                                   FontSize="11.5" Foreground="{StaticResource TextDimBrush}" Padding="12,8,12,4" />
+                        <ListBox x:Name="ListIssues" Grid.Row="1" BorderThickness="0" Background="Transparent"
+                                 Padding="6,0,6,4" FontSize="12"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled" />
+                        <TextBlock Grid.Row="2" Text="原始输出（前 120 行）"
+                                   FontSize="11" Foreground="{StaticResource TextDimBrush}" Padding="12,6,12,4" />
+                        <TextBox x:Name="TxtRawPreview" Grid.Row="3" IsReadOnly="True" AcceptsReturn="True"
+                                 FontFamily="{StaticResource MonoFont}" FontSize="11" Padding="10,6"
+                                 Background="{StaticResource OutputBgBrush}" BorderThickness="0"
+                                 VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"
+                                 TextWrapping="NoWrap" />
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <Border Grid.Row="2" Padding="16,10,16,12" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0">
+                <TextBlock Text="异常/注意自动从输出中提取；仅提取“疑似”，正式交付前请人工确认结论"
+                           FontSize="10.5" Foreground="{StaticResource TextDimBrush}" />
+            </Border>
+        </Grid>
+    </Border>
+</Window>

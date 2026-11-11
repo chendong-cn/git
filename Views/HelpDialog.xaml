@@ -1,0 +1,60 @@
+<Window x:Class="NetConfigPro.Views.HelpDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
+        Title="命令手册" Height="640" Width="880" WindowStartupLocation="CenterOwner"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent" ResizeMode="NoResize">
+
+    <shell:WindowChrome.WindowChrome>
+        <shell:WindowChrome CaptionHeight="40" ResizeBorderThickness="0" GlassFrameThickness="0" CornerRadius="8" />
+    </shell:WindowChrome.WindowChrome>
+
+    <Border Background="{StaticResource PanelBgBrush}" BorderBrush="{StaticResource AccentCyanBrush}"
+            BorderThickness="1" CornerRadius="8">
+        <Border.Effect>
+            <DropShadowEffect Color="#FF26415E" BlurRadius="16" ShadowDepth="0" Opacity="0.22" />
+        </Border.Effect>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="40" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <Border Grid.Row="0" Background="{StaticResource PanelBg2Brush}" CornerRadius="8,8,0,0"
+                    BorderThickness="0,0,0,1" BorderBrush="{StaticResource BorderBrush}" Padding="16,0">
+                <Grid>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="命令手册" FontSize="13.5" FontWeight="SemiBold"
+                                   Foreground="{StaticResource AccentCyanBrush}" />
+                        <TextBlock Text="关键命令语法与厂商差异（经官方资料审计；上真机前请按实际型号软件版本再核对）"
+                                   FontSize="10.5" Foreground="{StaticResource TextDimBrush}" />
+                    </StackPanel>
+                    <Button Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center"
+                            Style="{StaticResource WinBtnClose}" Content="✕" Click="BtnClose_Click" />
+                </Grid>
+            </Border>
+
+            <Grid Grid.Row="1" Margin="0,10,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="240" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <ListBox x:Name="TopicList" Grid.Column="0" Margin="12,0,4,12"
+                         SelectionChanged="TopicList_SelectionChanged" BorderThickness="0"
+                         Background="Transparent" ScrollViewer.HorizontalScrollBarVisibility="Disabled" />
+
+                <Border Grid.Column="1" Background="{StaticResource BgBaseBrush}" CornerRadius="6"
+                        BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" Margin="4,0,12,12">
+                    <ScrollViewer x:Name="ContentScroll" VerticalScrollBarVisibility="Auto" Padding="16,14" />
+                </Border>
+            </Grid>
+
+            <Border Grid.Row="2" Padding="16,0,16,12">
+                <TextBlock Text="💡 提示：命令示例可直接框选复制；「复制纯命令」只对生成器/巡检输出生效"
+                           FontSize="10.5" Foreground="{StaticResource TextDimBrush}" />
+            </Border>
+        </Grid>
+    </Border>
+</Window>

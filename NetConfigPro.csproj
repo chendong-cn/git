@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>false</UseWindowsForms>
+    <AssemblyName>NetConfigPro</AssemblyName>
+    <RootNamespace>NetConfigPro</RootNamespace>
+    <ApplicationIcon>Assets\app.ico</ApplicationIcon>
+    <Version>1.0.0.0</Version>
+    <Company>PCXX</Company>
+    <Product>NetConfigPro 网络设备配置专家</Product>
+    <Description>支持华为/华三/思科/锐捷的路由器、防火墙、交换机、无线AP配置生成与管理工具</Description>
+    <SatelliteResourceLanguages>zh-Hans</SatelliteResourceLanguages>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\app.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- 真实 SSH 下发用 plink（PuTTY，MIT 许可）：随 exe 外置同目录，单文件打包不内嵌 -->
+    <Content Include="Assets\plink.exe" Link="plink.exe" CopyToOutputDirectory="PreserveNewest"
+             CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+  </ItemGroup>
+
+</Project>

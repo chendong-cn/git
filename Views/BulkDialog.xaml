@@ -1,0 +1,66 @@
+<Window x:Class="NetConfigPro.Views.BulkDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
+        Title="批量生成配置" Height="430" Width="500" WindowStartupLocation="CenterOwner"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent" ResizeMode="NoResize">
+
+    <shell:WindowChrome.WindowChrome>
+        <shell:WindowChrome CaptionHeight="38" ResizeBorderThickness="0" GlassFrameThickness="0" CornerRadius="8" />
+    </shell:WindowChrome.WindowChrome>
+
+    <Border Background="{StaticResource PanelBgBrush}" BorderBrush="{StaticResource AccentCyanBrush}"
+            BorderThickness="1" CornerRadius="8">
+        <Border.Effect>
+            <DropShadowEffect Color="#FF26415E" BlurRadius="16" ShadowDepth="0" Opacity="0.22" />
+        </Border.Effect>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="38" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <Border Grid.Row="0" Background="{StaticResource PanelBg2Brush}" CornerRadius="8,8,0,0"
+                    BorderThickness="0,0,0,1" BorderBrush="{StaticResource BorderBrush}" Padding="16,0">
+                <TextBlock Text="批量生成配置" VerticalAlignment="Center" FontSize="13" FontWeight="SemiBold"
+                           Foreground="{StaticResource AccentCyanBrush}" />
+            </Border>
+
+            <StackPanel Grid.Row="1" Margin="20,18,20,6">
+                <TextBlock Text="用当前页签的整套参数批量生成多份配置；每份自动替换主机名与管理 IP（其余参数相同）。"
+                           TextWrapping="Wrap" Foreground="{StaticResource TextDimBrush}" FontSize="11.5" Margin="0,0,0,12" />
+
+                <HeaderedContentControl Header="生成份数" Style="{StaticResource Field}">
+                    <TextBox x:Name="TxtCount" Text="10" />
+                </HeaderedContentControl>
+                <HeaderedContentControl Header="名称前缀" Style="{StaticResource Field}">
+                    <TextBox x:Name="TxtPrefix" TextChanged="TxtPrefix_TextChanged" />
+                </HeaderedContentControl>
+                <HeaderedContentControl Header="起始管理 IP（可空=保留当前）" Style="{StaticResource Field}">
+                    <TextBox x:Name="TxtStartIp" Text="192.168.100.11" />
+                </HeaderedContentControl>
+                <HeaderedContentControl Header="输出目录" Style="{StaticResource Field}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBox x:Name="TxtDir" Grid.Column="0" IsReadOnly="True" />
+                        <Button Grid.Column="1" Content="浏览…" Margin="6,0,0,0" Padding="10,5" Click="BtnBrowse_Click" />
+                    </Grid>
+                </HeaderedContentControl>
+                <TextBlock x:Name="TxtTip" Text="提示：份数与 IP 递增超过 254 会被截断；文件输出为纯命令（可直接下发）。"
+                           TextWrapping="Wrap" Foreground="{StaticResource TextDimBrush}" FontSize="11" Margin="0,10,0,0" />
+            </StackPanel>
+
+            <Border Grid.Row="2" Padding="20,0,20,18">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Content="取消" Padding="18,7" Click="BtnCancel_Click" />
+                    <Button Content="开始批量生成" Style="{StaticResource PrimaryButton}" Padding="18,7"
+                            Margin="10,0,0,0" IsDefault="True" Click="BtnOk_Click" />
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Border>
+</Window>

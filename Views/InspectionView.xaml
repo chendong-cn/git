@@ -1,0 +1,122 @@
+<UserControl x:Class="NetConfigPro.Views.InspectionView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Grid Margin="22,18">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- 页头 -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,14">
+            <TextBlock Text="一键巡检" FontSize="19" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" />
+            <TextBlock Text="按厂商×设备生成特权视图只读巡检命令 —— 粘贴到设备逐条执行，即可完成一次全面健康检查"
+                       FontSize="12" Foreground="{StaticResource TextDimBrush}" Margin="0,5,0,0" />
+        </StackPanel>
+
+        <!-- 主体：左栏选择 / 右栏输出 -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="302" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- 左栏 -->
+            <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto" Background="{StaticResource SideBgBrush}"
+                          BorderThickness="0,0,1,0" BorderBrush="{StaticResource BorderBrush}">
+                <StackPanel Margin="16,16,16,20">
+
+                    <TextBlock Text="厂商平台" Style="{StaticResource SectionTitle}" />
+                    <WrapPanel>
+                        <RadioButton x:Name="VndHuawei" Style="{StaticResource ChipRadio}" Content="华为 Huawei" Tag="Huawei"
+                                     IsChecked="True" Checked="Vendor_Checked" />
+                        <RadioButton x:Name="VndH3C" Style="{StaticResource ChipRadio}" Content="华三 H3C" Tag="H3C" Checked="Vendor_Checked" />
+                        <RadioButton x:Name="VndCisco" Style="{StaticResource ChipRadio}" Content="思科 Cisco" Tag="Cisco" Checked="Vendor_Checked" />
+                        <RadioButton x:Name="VndRuijie" Style="{StaticResource ChipRadio}" Content="锐捷 Ruijie" Tag="Ruijie" Checked="Vendor_Checked" />
+                    </WrapPanel>
+
+                    <TextBlock Text="设备类型" Style="{StaticResource SectionTitle}" Margin="0,14,0,10" />
+                    <WrapPanel>
+                        <RadioButton x:Name="DevRouter" Style="{StaticResource ChipRadio}" Content="路由器" Tag="Router" IsChecked="True" Checked="Device_Checked" />
+                        <RadioButton x:Name="DevFirewall" Style="{StaticResource ChipRadio}" Content="防火墙" Tag="Firewall" Checked="Device_Checked" />
+                        <RadioButton x:Name="DevSwitch" Style="{StaticResource ChipRadio}" Content="交换机" Tag="Switch" Checked="Device_Checked" />
+                        <RadioButton x:Name="DevAp" Style="{StaticResource ChipRadio}" Content="无线 AP" Tag="AccessPoint" Checked="Device_Checked" />
+                    </WrapPanel>
+
+                    <Border Height="1" Background="{StaticResource BorderBrush}" Margin="0,6,0,14" />
+
+                    <Grid Margin="0,0,0,4">
+                        <TextBlock Text="巡检项目" Style="{StaticResource SectionTitle}" Margin="0" />
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Content="全选" Style="{StaticResource IconButton}" Click="BtnSelectAll_Click" />
+                            <Button Content="清空" Style="{StaticResource IconButton}" Margin="6,0,0,0" Click="BtnClearAll_Click" />
+                        </StackPanel>
+                    </Grid>
+                    <TextBlock Text="仅显示当前设备类型适用的巡检项；切换设备/厂商自动刷新"
+                               Foreground="{StaticResource TextDimBrush}" FontSize="11" Margin="0,0,0,12" TextWrapping="Wrap" />
+
+                    <StackPanel x:Name="GroupHost" />
+
+                    <!-- 巡检目标信息卡 -->
+                    <Border Background="{StaticResource PanelBgBrush}" BorderBrush="{StaticResource BorderBrush}"
+                            BorderThickness="1" CornerRadius="6" Padding="12,10" Margin="0,16,0,0">
+                        <StackPanel>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="巡检信息（写入输出文件头）" FontSize="10.5" Foreground="{StaticResource TextDimBrush}"
+                                           VerticalAlignment="Center" />
+                                <Button Grid.Column="1" Content="从设备清单载入…" Style="{StaticResource IconButton}"
+                                        FontSize="11" Padding="8,3"
+                                        Click="BtnLoadDevice_Click"
+                                        ToolTip="从「设备管理」选一台设备，自动带入厂商/设备类型并填入设备名称" />
+                            </Grid>
+                            <TextBox x:Name="TxtHost" Margin="0,6,0,0" Padding="8,6"
+                                     ToolTip="可填写设备名称，便于多台设备巡检时区分输出文件"
+                                     TextChanged="TxtHost_TextChanged" />
+                            <TextBlock x:Name="TxtSummary" Text="已选 0 项" FontSize="11"
+                                       Foreground="{StaticResource AccentCyanBrush}" Margin="0,8,0,0" FontWeight="SemiBold" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- 右栏：命令输出 -->
+            <Grid Grid.Column="1" Background="{StaticResource BgBaseBrush}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <Border Grid.Row="0" Padding="14,12" Background="{StaticResource PanelBgBrush}"
+                        BorderThickness="0,0,0,1" BorderBrush="{StaticResource BorderBrush}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Text="巡检命令输出" FontSize="13" FontWeight="SemiBold"
+                                       Foreground="{StaticResource AccentCyanBrush}" />
+                            <TextBlock x:Name="TxtStat" Text="0 条命令" FontSize="11"
+                                       Foreground="{StaticResource TextDimBrush}" Margin="0,3,0,0" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                            <Button Content="生成 / 刷新" Style="{StaticResource PrimaryButton}" Click="BtnGenerate_Click" />
+                            <Button Content="复制命令" Style="{StaticResource IconButton}" Margin="8,0,0,0" Click="BtnCopy_Click"
+                                    ToolTip="复制纯命令（已去掉注释与分隔线），可直接粘贴到设备终端执行" />
+                            <Button Content="导出 .txt" Style="{StaticResource IconButton}" Margin="6,0,0,0" Click="BtnExport_Click"
+                                    ToolTip="导出纯命令文本，用于离线保存或在终端工具中批量执行" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <RichTextBox x:Name="OutputBox" Grid.Row="1" IsReadOnly="True" BorderThickness="0" Padding="8,8,8,8"
+                             Background="{StaticResource OutputBgBrush}" VerticalScrollBarVisibility="Auto" />
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

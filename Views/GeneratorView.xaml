@@ -1,0 +1,1319 @@
+<UserControl x:Class="NetConfigPro.Views.GeneratorView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:models="clr-namespace:NetConfigPro.Models">
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="270" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="510" />
+        </Grid.ColumnDefinitions>
+
+        <!-- ========================= 左栏：厂商 / 设备 / 模块 ========================= -->
+        <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto" Background="{StaticResource SideBgBrush}"
+                      BorderThickness="0,0,1,0" BorderBrush="{StaticResource BorderBrush}">
+            <StackPanel Margin="16,16,16,20">
+
+                <!-- 最近方案（B3） -->
+                <Border Background="{StaticResource PanelBgBrush}" BorderBrush="{StaticResource BorderBrush}"
+                        BorderThickness="1" CornerRadius="6" Padding="12,10" Margin="0,0,0,14">
+                    <StackPanel>
+                        <TextBlock Text="最近方案（自动记忆成功生成的参数）" FontSize="10.5" Foreground="{StaticResource TextDimBrush}" />
+                        <ComboBox x:Name="CmbRecent" Margin="0,6,0,0" Padding="6,4"
+                                  ToolTip="选择一条历史方案后点“载入”一键恢复厂商/设备与全部参数" />
+                        <WrapPanel Margin="0,8,0,0">
+                            <Button Content="载入" Style="{StaticResource PrimaryButton}" FontSize="11" Padding="14,5"
+                                    Click="BtnRecentLoad_Click" />
+                            <Button Content="存为方案" Style="{StaticResource IconButton}" Margin="6,0,0,0" FontSize="11" Padding="10,5"
+                                    Click="BtnRecentSave_Click" ToolTip="把当前参数保存为命名方案，便于同类设备复用" />
+                            <Button Content="删除" Style="{StaticResource IconButton}" Margin="6,0,0,0" FontSize="11" Padding="10,5"
+                                    Click="BtnRecentDelete_Click" ToolTip="删除选中方案" />
+                        </WrapPanel>
+                    </StackPanel>
+                </Border>
+
+                <TextBlock Text="厂商平台" Style="{StaticResource SectionTitle}" />
+                <WrapPanel>
+                    <RadioButton x:Name="VndHuawei" Style="{StaticResource ChipRadio}" Content="华为 Huawei" Tag="Huawei"
+                                 IsChecked="True" Checked="Vendor_Checked" />
+                    <RadioButton x:Name="VndH3C" Style="{StaticResource ChipRadio}" Content="华三 H3C" Tag="H3C" Checked="Vendor_Checked" />
+                    <RadioButton x:Name="VndCisco" Style="{StaticResource ChipRadio}" Content="思科 Cisco" Tag="Cisco" Checked="Vendor_Checked" />
+                    <RadioButton x:Name="VndRuijie" Style="{StaticResource ChipRadio}" Content="锐捷 Ruijie" Tag="Ruijie" Checked="Vendor_Checked" />
+                </WrapPanel>
+
+                <TextBlock Text="设备类型" Style="{StaticResource SectionTitle}" Margin="0,14,0,10" />
+                <WrapPanel>
+                    <RadioButton x:Name="DevRouter" Style="{StaticResource ChipRadio}" Content="路由器" Tag="Router" Checked="Device_Checked" />
+                    <RadioButton x:Name="DevFirewall" Style="{StaticResource ChipRadio}" Content="防火墙" Tag="Firewall" Checked="Device_Checked" />
+                    <RadioButton x:Name="DevSwitch" Style="{StaticResource ChipRadio}" Content="交换机" Tag="Switch" IsChecked="True" Checked="Device_Checked" />
+                    <RadioButton x:Name="DevAp" Style="{StaticResource ChipRadio}" Content="无线 AP" Tag="AccessPoint" Checked="Device_Checked" />
+                </WrapPanel>
+
+                <Border Height="1" Background="{StaticResource BorderBrush}" Margin="0,6,0,14" />
+
+                <Grid Margin="0,0,0,10">
+                    <TextBlock Text="功能模块" Style="{StaticResource SectionTitle}" Margin="0" />
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Content="预设" Style="{StaticResource IconButton}" Click="BtnPreset_Click"
+                                ToolTip="常用组合一键勾选（按设备类型过滤）" />
+                        <Button Content="全选" Style="{StaticResource IconButton}" Margin="6,0,0,0" Click="BtnSelectAll_Click" />
+                        <Button Content="清空" Style="{StaticResource IconButton}" Margin="6,0,0,0" Click="BtnClearAll_Click" />
+                    </StackPanel>
+                </Grid>
+
+                <TextBox x:Name="TxtModuleSearch" Margin="0,0,0,12" Padding="8,6"
+                         TextChanged="TxtModuleSearch_TextChanged"
+                         ToolTip="按名称/关键字过滤模块列表（保留勾选状态）" />
+
+                <ItemsControl x:Name="ModuleList">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <CheckBox Content="{Binding Name}" Tag="{Binding Key}" Margin="0,0,0,9"
+                                      IsChecked="{Binding Enabled, Mode=TwoWay}"
+                                      ToolTip="{Binding Tip}"
+                                      Checked="Module_Toggled" Unchecked="Module_Toggled" />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <TextBlock x:Name="TxtModuleNone" Text="（没有匹配的模块）" Visibility="Collapsed"
+                           Foreground="{StaticResource TextDimBrush}" FontSize="11" Margin="2,0,0,4" />
+
+                <Border Background="{StaticResource PanelBgBrush}" BorderBrush="{StaticResource BorderBrush}"
+                        BorderThickness="1" CornerRadius="6" Padding="12,10" Margin="0,16,0,0">
+                    <StackPanel>
+                        <TextBlock Text="当前选择" FontSize="10.5" Foreground="{StaticResource TextDimBrush}" />
+                        <TextBlock x:Name="TxtProfile" Text="华为 · 交换机" FontSize="12.5"
+                                   Foreground="{StaticResource AccentCyanBrush}" Margin="0,6,0,0" FontWeight="SemiBold" />
+                        <TextBlock x:Name="TxtModuleCount" Text="已选 0 个模块" FontSize="11"
+                                   Foreground="{StaticResource TextDimBrush}" Margin="0,3,0,0" />
+                        <Button Content="从设备清单载入…" Style="{StaticResource IconButton}" Margin="0,10,0,0"
+                                HorizontalAlignment="Left" Padding="10,5"
+                                Click="BtnLoadDevice_Click"
+                                ToolTip="从「设备管理」清单选一台设备，自动带入厂商/设备类型并预填主机名与管理 IP" />
+                        <WrapPanel Margin="0,8,0,0">
+                            <Button Content="导入现网配置…" Style="{StaticResource IconButton}" FontSize="11" Padding="10,5"
+                                    Click="BtnImportCfg_Click"
+                                    ToolTip="把设备上导出的 running-config 粘贴进来：自动识别厂商并回填主机名/管理IP/VLAN/静态路由等核心参数" />
+                            <Button Content="命令手册" Style="{StaticResource IconButton}" Margin="6,0,0,0" FontSize="11" Padding="10,5"
+                                    Click="BtnHelp_Click" ToolTip="内置关键命令语法与厂商差异手册（官方资料审计）" />
+                        </WrapPanel>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- ========================= 中栏：参数表单 ========================= -->
+        <Border Grid.Column="1" Background="{StaticResource BgBaseBrush}">
+            <TabControl x:Name="ParamTabs">
+
+                <!--基础配置 -->
+                <TabItem Header="基础配置" x:Name="TabBasic">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel x:Name="BasicPanel" Margin="18,14,18,20">
+                            <HeaderedContentControl Header="主机名" Style="{StaticResource Field}">
+                                <TextBox Text="{Binding Hostname, UpdateSourceTrigger=PropertyChanged}" />
+                            </HeaderedContentControl>
+                            <HeaderedContentControl Header="域名" Style="{StaticResource Field}">
+                                <TextBox Text="{Binding DomainName, UpdateSourceTrigger=PropertyChanged}" />
+                            </HeaderedContentControl>
+
+                            <TextBlock Text="管理地址" Style="{StaticResource SubTitle}" Margin="0,8,0,10" />
+                            <HeaderedContentControl Header="管理 VLAN" Style="{StaticResource Field}">
+                                <TextBox Text="{Binding MgmtVlanId, UpdateSourceTrigger=PropertyChanged}" />
+                            </HeaderedContentControl>
+                            <HeaderedContentControl Header="管理 IP" Style="{StaticResource Field}">
+                                <TextBox Text="{Binding MgmtIp, UpdateSourceTrigger=PropertyChanged}" />
+                            </HeaderedContentControl>
+                            <HeaderedContentControl Header="子网掩码" Style="{StaticResource Field}">
+                                <TextBox Text="{Binding MgmtMask, UpdateSourceTrigger=PropertyChanged}" />
+                            </HeaderedContentControl>
+                            <HeaderedContentControl Header="默认网关" Style="{StaticResource Field}">
+                                <TextBox Text="{Binding DefaultGateway, UpdateSourceTrigger=PropertyChanged}" />
+                            </HeaderedContentControl>
+
+                            <TextBlock Text="运维服务" Style="{StaticResource SubTitle}" Margin="0,8,0,10" />
+                            <HeaderedContentControl Header="DNS 服务器" Style="{StaticResource Field}">
+                                <TextBox Text="{Binding DnsServers, UpdateSourceTrigger=PropertyChanged}"
+                                         ToolTip="多个 DNS 用空格分隔" />
+                            </HeaderedContentControl>
+                            <HeaderedContentControl Header="NTP 服务器" Style="{StaticResource Field}">
+                                <TextBox Text="{Binding NtpServer, UpdateSourceTrigger=PropertyChanged}" />
+                            </HeaderedContentControl>
+                            <HeaderedContentControl Header="日志服务器" Style="{StaticResource Field}">
+                                <TextBox Text="{Binding SyslogHost, UpdateSourceTrigger=PropertyChanged}" />
+                            </HeaderedContentControl>
+                            <HeaderedContentControl Header="时区" Style="{StaticResource Field}">
+                                <TextBox Text="{Binding TimeZone, UpdateSourceTrigger=PropertyChanged}" />
+                            </HeaderedContentControl>
+
+                            <!-- WAN 上网配置 -->
+                            <StackPanel x:Name="WanPanel">
+                                <TextBlock Text="WAN 上网配置" Style="{StaticResource SubTitle}" Margin="0,10,0,10" />
+                                <HeaderedContentControl Header="上网方式" Style="{StaticResource Field}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <RadioButton x:Name="RbWanStatic" Content="固定 IP" Tag="StaticIp" IsChecked="True" Checked="WanMode_Checked" Margin="0,0,12,0" />
+                                        <RadioButton x:Name="RbWanDhcp" Content="DHCP" Tag="Dhcp" Checked="WanMode_Checked" Margin="0,0,12,0" />
+                                        <RadioButton x:Name="RbWanPppoe" Content="PPPoE" Tag="Pppoe" Checked="WanMode_Checked" />
+                                    </StackPanel>
+                                </HeaderedContentControl>
+                                <HeaderedContentControl Header="外网接口" Style="{StaticResource Field}">
+                                    <TextBox Text="{Binding WanInterface, UpdateSourceTrigger=PropertyChanged}" />
+                                </HeaderedContentControl>
+
+                                <StackPanel x:Name="WanStaticPanel">
+                                    <HeaderedContentControl Header="外网 IP" Style="{StaticResource Field}">
+                                        <TextBox Text="{Binding WanIp, UpdateSourceTrigger=PropertyChanged}" />
+                                    </HeaderedContentControl>
+                                    <HeaderedContentControl Header="外网掩码" Style="{StaticResource Field}">
+                                        <TextBox Text="{Binding WanMask, UpdateSourceTrigger=PropertyChanged}" />
+                                    </HeaderedContentControl>
+                                    <HeaderedContentControl Header="外网网关" Style="{StaticResource Field}">
+                                        <TextBox Text="{Binding WanGateway, UpdateSourceTrigger=PropertyChanged}" />
+                                    </HeaderedContentControl>
+                                </StackPanel>
+
+                                <StackPanel x:Name="WanPppoePanel" Visibility="Collapsed">
+                                    <HeaderedContentControl Header="拨号用户名" Style="{StaticResource Field}">
+                                        <TextBox Text="{Binding PppoeUser, UpdateSourceTrigger=PropertyChanged}" />
+                                    </HeaderedContentControl>
+                                    <HeaderedContentControl Header="拨号密码" Style="{StaticResource Field}">
+                                        <TextBox Text="{Binding PppoePassword, UpdateSourceTrigger=PropertyChanged}" />
+                                    </HeaderedContentControl>
+                                </StackPanel>
+
+                                <HeaderedContentControl Header="内网接口" Style="{StaticResource Field}">
+                                    <TextBox Text="{Binding LanInterface, UpdateSourceTrigger=PropertyChanged}" />
+                                </HeaderedContentControl>
+                                <HeaderedContentControl Header="内网 IP" Style="{StaticResource Field}">
+                                    <TextBox Text="{Binding LanIp, UpdateSourceTrigger=PropertyChanged}" />
+                                </HeaderedContentControl>
+                                <HeaderedContentControl Header="内网掩码" Style="{StaticResource Field}">
+                                    <TextBox Text="{Binding LanMask, UpdateSourceTrigger=PropertyChanged}" />
+                                </HeaderedContentControl>
+                            </StackPanel>
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
+
+                <!--VLAN -->
+                <TabItem Header="VLAN" x:Name="TabVlan">
+                    <Grid Margin="14,12">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <DataGrid x:Name="GridVlan" AutoGenerateColumns="False" CanUserAddRows="True">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="VLAN ID" Binding="{Binding Id}" Width="80" />
+                                <DataGridTextColumn Header="名称" Binding="{Binding Name}" Width="110" />
+                                <DataGridTextColumn Header="描述" Binding="{Binding Description}" Width="130" />
+                                <DataGridCheckBoxColumn Header="三层接口" Binding="{Binding L3Enabled}" Width="70" />
+                                <DataGridTextColumn Header="接口 IP" Binding="{Binding IpAddress}" Width="*" />
+                                <DataGridTextColumn Header="掩码" Binding="{Binding Mask}" Width="120" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,10,0,0">
+                            <Button Content="添加一行" Style="{StaticResource IconButton}" Click="BtnAddVlan_Click" />
+                            <Button Content="删除选中" Style="{StaticResource IconButton}" Margin="8,0,0,0" Click="BtnDelVlan_Click" />
+                            <Button Content="清空" Style="{StaticResource IconButton}" Margin="8,0,0,0" Click="BtnClearVlan_Click" />
+                        </StackPanel>
+                    </Grid>
+                </TabItem>
+
+                <!--接口 -->
+                <TabItem Header="接口" x:Name="TabInterface">
+                    <Grid Margin="14,12">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <TextBlock x:Name="TxtIfHint" Text="接口名示例：GigabitEthernet0/0/1" Foreground="{StaticResource TextDimBrush}"
+                                   FontSize="11.5" Margin="0,0,0,10" />
+                        <DataGrid x:Name="GridInterface" Grid.Row="1" AutoGenerateColumns="False" CanUserAddRows="True">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="接口名称" Binding="{Binding Name}" Width="150" />
+                                <DataGridTextColumn Header="描述" Binding="{Binding Description}" Width="110" />
+                                <DataGridComboBoxColumn Header="模式" SelectedItemBinding="{Binding Mode}"
+                                                        ItemsSource="{x:Static models:EnumLists.InterfaceModes}" Width="90" />
+                                <DataGridTextColumn Header="Access VLAN" Binding="{Binding AccessVlan}" Width="90" />
+                                <DataGridTextColumn Header="Trunk VLAN" Binding="{Binding TrunkVlans}" Width="90" />
+                                <DataGridTextColumn Header="IP 地址" Binding="{Binding IpAddress}" Width="*" />
+                                <DataGridTextColumn Header="掩码" Binding="{Binding Mask}" Width="110" />
+                                <DataGridCheckBoxColumn Header="启用" Binding="{Binding Enabled}" Width="55" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,10,0,0">
+                            <Button Content="添加一行" Style="{StaticResource IconButton}" Click="BtnAddIf_Click" />
+                            <Button Content="删除选中" Style="{StaticResource IconButton}" Margin="8,0,0,0" Click="BtnDelIf_Click" />
+                            <Button Content="插入示例接口" Style="{StaticResource IconButton}" Margin="8,0,0,0" Click="BtnSampleIf_Click" />
+                            <Button Content="清空" Style="{StaticResource IconButton}" Margin="8,0,0,0" Click="BtnClearIf_Click" />
+                        </StackPanel>
+                    </Grid>
+                </TabItem>
+
+                <!--生成树 -->
+                <TabItem Header="生成树" x:Name="TabStp">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel x:Name="StpPanel" Margin="18,14,18,20">
+                            <HeaderedContentControl Header="工作模式" Style="{StaticResource Field}">
+                                <ComboBox x:Name="CmbStpMode" ItemsSource="{x:Static models:EnumLists.StpModes}"
+                                          SelectedItem="{Binding Mode}" />
+                            </HeaderedContentControl>
+                            <HeaderedContentControl Header="优先级" Style="{StaticResource Field}">
+                                <TextBox Text="{Binding Priority, UpdateSourceTrigger=PropertyChanged}" ToolTip="4096 的倍数" />
+                            </HeaderedContentControl>
+                            <HeaderedContentControl Header="设为主根" Style="{StaticResource Field}">
+                                <CheckBox IsChecked="{Binding RootPrimary}" />
+                            </HeaderedContentControl>
+                            <HeaderedContentControl Header="MST 域名" Style="{StaticResource Field}">
+                                <TextBox Text="{Binding RegionName, UpdateSourceTrigger=PropertyChanged}" />
+                            </HeaderedContentControl>
+                            <HeaderedContentControl Header="实例映射" Style="{StaticResource Field}">
+                                <TextBox Text="{Binding InstanceMap, UpdateSourceTrigger=PropertyChanged}"
+                                         ToolTip="格式：实例ID:VLAN范围，例如 1:10-20" />
+                            </HeaderedContentControl>
+                            <TextBlock Text="说明：优先级取值为 4096 的倍数（0/4096/8192…）；MSTP 模式下实例映射生效。"
+                                       TextWrapping="Wrap" Foreground="{StaticResource TextDimBrush}" FontSize="11.5" Margin="0,6,0,0" />
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
+
+                <!--路由（拆分：静态 / OSPF / BGP / RIP·EIGRP，可多选并存） -->
+                <TabItem Header="路由" x:Name="TabRouting">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel x:Name="RoutingPanel" Margin="18,14,18,20">
+                            <TextBlock Text="左侧勾选哪些路由模块，本页对应参数就参与生成（支持静态 + OSPF 等并存）。"
+                                       Foreground="{StaticResource TextDimBrush}" FontSize="11.5" Margin="0,0,0,8" TextWrapping="Wrap" />
+
+                            <TextBlock Text="静态路由（勾选「静态路由」模块生效）" Style="{StaticResource SubTitle}" />
+                            <DataGrid x:Name="GridStaticRoute" AutoGenerateColumns="False" Height="140" CanUserAddRows="True">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="目的网段" Binding="{Binding Prefix}" Width="110" />
+                                    <DataGridTextColumn Header="掩码" Binding="{Binding Mask}" Width="110" />
+                                    <DataGridTextColumn Header="下一跳" Binding="{Binding NextHop}" Width="*" />
+                                    <DataGridTextColumn Header="优先级" Binding="{Binding Preference}" Width="70" />
+                                    <DataGridTextColumn Header="说明" Binding="{Binding Description}" Width="100" />
+                                </DataGrid.Columns>
+                            </DataGrid>
+
+                            <TextBlock Text="OSPF（勾选「OSPF 路由」模块生效）" Style="{StaticResource SubTitle}" Margin="0,14,0,8" />
+                            <HeaderedContentControl Header="进程号" Style="{StaticResource Field}">
+                                <TextBox Text="{Binding OspfProcess, UpdateSourceTrigger=PropertyChanged}" />
+                            </HeaderedContentControl>
+                            <HeaderedContentControl Header="Router ID" Style="{StaticResource Field}">
+                                <TextBox Text="{Binding RouterId, UpdateSourceTrigger=PropertyChanged}" />
+                            </HeaderedContentControl>
+                            <HeaderedContentControl Header="重分布直连" Style="{StaticResource Field}">
+                                <CheckBox IsChecked="{Binding RedistributeConnected}" />
+                            </HeaderedContentControl>
+                            <HeaderedContentControl Header="通告默认路由" Style="{StaticResource Field}">
+                                <CheckBox IsChecked="{Binding DefaultRouteAdvertise}" />
+                            </HeaderedContentControl>
+                            <TextBlock Text="OSPF 网络宣告 / RIP·EIGRP 网段（OSPF 与动态路由模块共用此表）"
+                                       Foreground="{StaticResource TextDimBrush}" FontSize="11.5" Margin="0,4,0,6" TextWrapping="Wrap" />
+                            <DataGrid x:Name="GridOspfNet" AutoGenerateColumns="False" Height="150" CanUserAddRows="True">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="网络号" Binding="{Binding Network}" Width="130" />
+                                    <DataGridTextColumn Header="反掩码" Binding="{Binding Wildcard}" Width="130" />
+                                    <DataGridTextColumn Header="区域" Binding="{Binding Area}" Width="70" />
+                                    <DataGridComboBoxColumn Header="区域类型" SelectedItemBinding="{Binding AreaType}"
+                                                            ItemsSource="{x:Static models:EnumLists.AreaTypes}" Width="100" />
+                                </DataGrid.Columns>
+                            </DataGrid>
+
+                            <TextBlock Text="BGP（勾选「BGP 路由」模块生效）" Style="{StaticResource SubTitle}" Margin="0,14,0,8" />
+                            <HeaderedContentControl Header="本地 AS 号" Style="{StaticResource Field}">
+                                <TextBox Text="{Binding BgpAs, UpdateSourceTrigger=PropertyChanged}" />
+                            </HeaderedContentControl>
+                            <HeaderedContentControl Header="EIGRP AS（思科动态路由）" Style="{StaticResource Field}">
+                                <TextBox Text="{Binding EigrpAs, UpdateSourceTrigger=PropertyChanged}"
+                                         ToolTip="思科「RIP / EIGRP」模块输出 EIGRP 时使用的自治系统号" />
+                            </HeaderedContentControl>
+                            <DataGrid x:Name="GridBgpPeer" AutoGenerateColumns="False" Height="120" CanUserAddRows="True" Margin="0,6,0,0">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="邻居 IP" Binding="{Binding PeerIp}" Width="140" />
+                                    <DataGridTextColumn Header="远端 AS" Binding="{Binding RemoteAs}" Width="110" />
+                                    <DataGridTextColumn Header="描述" Binding="{Binding Description}" Width="*" />
+                                </DataGrid.Columns>
+                            </DataGrid>
+
+                            <TextBlock Text="动态路由（勾选「RIP / EIGRP」模块生效）：华为/华三/锐捷输出 RIPv2，思科输出 EIGRP（AS 号见上），思科 ASA 不支持已自动跳过并提示。"
+                                       TextWrapping="Wrap" Foreground="{StaticResource TextDimBrush}" FontSize="11.5" Margin="0,10,0,0" />
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
+
+                <!-- v11：策略路由 PBR -->
+                <TabItem Header="策略路由 PBR" x:Name="TabPbr">
+                    <Grid Margin="14,12">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <TextBlock Text="按 ACL 匹配流量重定向到指定下一跳/出接口（多出口分流）。动作列填 next-hop 或 interface，匹配 ACL 需先在「ACL」页签中定义；策略仅应用到「应用接口」的入方向。"
+                                   Foreground="{StaticResource TextDimBrush}" FontSize="11.5" Margin="0,0,0,10" TextWrapping="Wrap" />
+                        <DataGrid x:Name="GridPbr" Grid.Row="1" AutoGenerateColumns="False" CanUserAddRows="True">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="名称" Binding="{Binding Name}" Width="120" />
+                                <DataGridTextColumn Header="匹配 ACL" Binding="{Binding MatchAcl}" Width="90" />
+                                <DataGridTextColumn Header="动作" Binding="{Binding Mode}" Width="90" />
+                                <DataGridTextColumn Header="下一跳 IP" Binding="{Binding NextHop}" Width="130" />
+                                <DataGridTextColumn Header="出接口" Binding="{Binding ExitInterface}" Width="150" />
+                                <DataGridTextColumn Header="应用接口" Binding="{Binding ApplyOn}" Width="150" />
+                                <DataGridTextColumn Header="描述" Binding="{Binding Description}" Width="*" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,10,0,0">
+                            <Button Content="删除选中" Style="{StaticResource IconButton}" Tag="{x:Reference GridPbr}" Click="BtnDelRow_Click" />
+                            <TextBlock Text="（可直接在表格内输入新行）" Foreground="{StaticResource TextDimBrush}"
+                                       FontSize="11" Margin="10,0,0,0" />
+                        </StackPanel>
+                    </Grid>
+                </TabItem>
+
+                <!-- v11：QoS 限速 -->
+                <TabItem Header="QoS 限速" x:Name="TabQos">
+                    <Grid Margin="14,12">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <TextBlock Text="接口承诺速率限制（CIR 单位 kbps）。方向填 inbound/outbound/both；思科与锐捷输出自动换算为 CAR（bps），华为/华三输出 qos lr。版本差异命令会以注释提示。"
+                                   Foreground="{StaticResource TextDimBrush}" FontSize="11.5" Margin="0,0,0,10" TextWrapping="Wrap" />
+                        <DataGrid x:Name="GridQos" Grid.Row="1" AutoGenerateColumns="False" CanUserAddRows="True">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="接口" Binding="{Binding Interface}" Width="*" />
+                                <DataGridTextColumn Header="方向" Binding="{Binding Direction}" Width="100" />
+                                <DataGridTextColumn Header="速率(kbps)" Binding="{Binding CirKbps}" Width="110" />
+                                <DataGridTextColumn Header="描述" Binding="{Binding Description}" Width="160" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,10,0,0">
+                            <Button Content="删除选中" Style="{StaticResource IconButton}" Tag="{x:Reference GridQos}" Click="BtnDelRow_Click" />
+                            <TextBlock Text="（可直接在表格内输入新行）" Foreground="{StaticResource TextDimBrush}"
+                                       FontSize="11" Margin="10,0,0,0" />
+                        </StackPanel>
+                    </Grid>
+                </TabItem>
+
+                <!--ACL -->
+                <TabItem Header="ACL" x:Name="TabAcl">
+                    <Grid Margin="14,12">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <TextBlock Text="源/目的填 any 表示任意地址；扩展 ACL 需填写目的地址。"
+                                   Foreground="{StaticResource TextDimBrush}" FontSize="11.5" Margin="0,0,0,10" />
+                        <DataGrid x:Name="GridAcl" Grid.Row="1" AutoGenerateColumns="False" CanUserAddRows="True">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="编号/名称" Binding="{Binding Number}" Width="100" />
+                                <DataGridComboBoxColumn Header="类型" SelectedItemBinding="{Binding Kind}"
+                                                        ItemsSource="{x:Static models:EnumLists.AclKinds}" Width="90" />
+                                <DataGridComboBoxColumn Header="动作" SelectedItemBinding="{Binding Action}"
+                                                        ItemsSource="{x:Static models:EnumLists.PermitDeny}" Width="80" />
+                                <DataGridComboBoxColumn Header="协议" SelectedItemBinding="{Binding Protocol}"
+                                                        ItemsSource="{x:Static models:EnumLists.Protocols}" Width="75" />
+                                <DataGridTextColumn Header="源地址" Binding="{Binding Source}" Width="110" />
+                                <DataGridTextColumn Header="源反掩码" Binding="{Binding SrcWildcard}" Width="100" />
+                                <DataGridTextColumn Header="目的地址" Binding="{Binding Destination}" Width="110" />
+                                <DataGridTextColumn Header="目的反掩码" Binding="{Binding DstWildcard}" Width="100" />
+                                <DataGridTextColumn Header="说明" Binding="{Binding Description}" Width="*" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,10,0,0">
+                            <Button Content="添加一行" Style="{StaticResource IconButton}" Click="BtnAddAcl_Click" />
+                            <Button Content="删除选中" Style="{StaticResource IconButton}" Margin="8,0,0,0" Click="BtnDelAcl_Click" />
+                            <Button Content="清空" Style="{StaticResource IconButton}" Margin="8,0,0,0" Click="BtnClearAcl_Click" />
+                        </StackPanel>
+                    </Grid>
+                </TabItem>
+
+                <!--NAT -->
+                <TabItem Header="NAT" x:Name="TabNat">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel x:Name="NatPanel" Margin="18,14,18,20">
+                            <HeaderedContentControl Header="转换方式" Style="{StaticResource Field}">
+                                <StackPanel Orientation="Vertical">
+                                    <RadioButton x:Name="RbNatEasy" Content="Easy IP（PAT 出网）" Tag="EasyIp" IsChecked="True" Checked="NatKind_Checked" Margin="0,3" />
+                                    <RadioButton x:Name="RbNatStatic" Content="静态端口映射" Tag="StaticNat" Checked="NatKind_Checked" Margin="0,3" />
+                                </StackPanel>
+                            </HeaderedContentControl>
+                            <HeaderedContentControl Header="外网接口" Style="{StaticResource Field}">
+                                <TextBox Text="{Binding OutsideInterface, UpdateSourceTrigger=PropertyChanged}" />
+                            </HeaderedContentControl>
+                            <HeaderedContentControl Header="内网接口" Style="{StaticResource Field}">
+                                <TextBox Text="{Binding InsideInterface, UpdateSourceTrigger=PropertyChanged}" />
+                            </HeaderedContentControl>
+
+                            <StackPanel x:Name="EasyIpPanel">
+                                <HeaderedContentControl Header="匹配 ACL" Style="{StaticResource Field}">
+                                    <TextBox Text="{Binding AclNumber, UpdateSourceTrigger=PropertyChanged}" />
+                                </HeaderedContentControl>
+                                <TextBlock Text="提示：ACL 模块中需存在该编号，并允许内网网段通过。"
+                                           Foreground="{StaticResource TextDimBrush}" FontSize="11.5" Margin="0,4,0,0" />
+                            </StackPanel>
+
+                            <StackPanel x:Name="StaticNatPanel" Visibility="Collapsed">
+                                <HeaderedContentControl Header="协议" Style="{StaticResource Field}">
+                                    <ComboBox ItemsSource="{x:Static models:EnumLists.Protocols}" SelectedItem="{Binding Protocol}" />
+                                </HeaderedContentControl>
+                                <HeaderedContentControl Header="公网 IP" Style="{StaticResource Field}">
+                                    <TextBox Text="{Binding GlobalIp, UpdateSourceTrigger=PropertyChanged}" />
+                                </HeaderedContentControl>
+                                <HeaderedContentControl Header="公网端口" Style="{StaticResource Field}">
+                                    <TextBox Text="{Binding GlobalPort, UpdateSourceTrigger=PropertyChanged}" />
+                                </HeaderedContentControl>
+                                <HeaderedContentControl Header="内网服务器" Style="{StaticResource Field}">
+                                    <TextBox Text="{Binding InsideIp, UpdateSourceTrigger=PropertyChanged}" />
+                                </HeaderedContentControl>
+                                <HeaderedContentControl Header="内网端口" Style="{StaticResource Field}">
+                                    <TextBox Text="{Binding InsidePort, UpdateSourceTrigger=PropertyChanged}" />
+                                </HeaderedContentControl>
+                            </StackPanel>
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
+
+                <!--防火墙 -->
+                <TabItem Header="防火墙" x:Name="TabFirewall">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="18,14,18,20">
+                            <TextBlock Text="安全区域" Style="{StaticResource SubTitle}" />
+                            <DataGrid x:Name="GridZone" AutoGenerateColumns="False" Height="150" CanUserAddRows="True">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="区域名称" Binding="{Binding Name}" Width="120" />
+                                    <DataGridTextColumn Header="成员接口" Binding="{Binding Interfaces}" Width="*"
+                                                        ToolTipService.ToolTip="多个接口用英文逗号分隔" />
+                                    <DataGridTextColumn Header="优先级" Binding="{Binding Priority}" Width="90" />
+                                </DataGrid.Columns>
+                            </DataGrid>
+
+                            <TextBlock Text="安全策略" Style="{StaticResource SubTitle}" Margin="0,14,0,8" />
+                            <DataGrid x:Name="GridPolicy" AutoGenerateColumns="False" Height="200" CanUserAddRows="True">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="规则名" Binding="{Binding Name}" Width="110" />
+                                    <DataGridComboBoxColumn Header="动作" SelectedItemBinding="{Binding Action}"
+                                                            ItemsSource="{x:Static models:EnumLists.PermitDeny}" Width="80" />
+                                    <DataGridTextColumn Header="源区域" Binding="{Binding SourceZone}" Width="90" />
+                                    <DataGridTextColumn Header="目的区域" Binding="{Binding DestZone}" Width="90" />
+                                    <DataGridTextColumn Header="源地址" Binding="{Binding Source}" Width="120" />
+                                    <DataGridTextColumn Header="目的地址" Binding="{Binding Destination}" Width="100" />
+                                    <DataGridComboBoxColumn Header="服务" SelectedItemBinding="{Binding Service}"
+                                                            ItemsSource="{x:Static models:EnumLists.Services}" Width="85" />
+                                    <DataGridTextColumn Header="描述" Binding="{Binding Description}" Width="*" />
+                                </DataGrid.Columns>
+                            </DataGrid>
+                            <TextBlock Text="地址支持 192.168.1.0/24 或 any；服务选 any 表示不做服务限定。"
+                                       Foreground="{StaticResource TextDimBrush}" FontSize="11.5" Margin="0,8,0,0" />
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
+
+                <!--DHCP -->
+                <TabItem Header="DHCP" x:Name="TabDhcp">
+                    <Grid Margin="14,12">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <DataGrid x:Name="GridDhcp" AutoGenerateColumns="False" CanUserAddRows="True">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="地址池" Binding="{Binding Name}" Width="100" />
+                                <DataGridTextColumn Header="网段" Binding="{Binding Network}" Width="120" />
+                                <DataGridTextColumn Header="掩码" Binding="{Binding Mask}" Width="120" />
+                                <DataGridTextColumn Header="网关" Binding="{Binding Gateway}" Width="120" />
+                                <DataGridTextColumn Header="DNS1" Binding="{Binding Dns1}" Width="105" />
+                                <DataGridTextColumn Header="DNS2" Binding="{Binding Dns2}" Width="105" />
+                                <DataGridTextColumn Header="排除起始" Binding="{Binding ExcludeFrom}" Width="110" />
+                                <DataGridTextColumn Header="排除结束" Binding="{Binding ExcludeTo}" Width="110" />
+                                <DataGridTextColumn Header="租期(天)" Binding="{Binding LeaseDays}" Width="80" />
+                                <DataGridTextColumn Header="VLAN" Binding="{Binding VlanId}" Width="*" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,10,0,0">
+                            <Button Content="添加一行" Style="{StaticResource IconButton}" Click="BtnAddDhcp_Click" />
+                            <Button Content="删除选中" Style="{StaticResource IconButton}" Margin="8,0,0,0" Click="BtnDelDhcp_Click" />
+                            <Button Content="清空" Style="{StaticResource IconButton}" Margin="8,0,0,0" Click="BtnClearDhcp_Click" />
+                        </StackPanel>
+                    </Grid>
+                </TabItem>
+
+                <!--无线 -->
+                <TabItem Header="无线" x:Name="TabWireless">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel x:Name="WirelessPanel" Margin="18,14,18,20">
+                            <HeaderedContentControl Header="SSID" Style="{StaticResource Field}">
+                                <TextBox Text="{Binding Ssid, UpdateSourceTrigger=PropertyChanged}" />
+                            </HeaderedContentControl>
+                            <HeaderedContentControl Header="密码" Style="{StaticResource Field}">
+                                <TextBox Text="{Binding Password, UpdateSourceTrigger=PropertyChanged}" />
+                            </HeaderedContentControl>
+                            <HeaderedContentControl Header="加密方式" Style="{StaticResource Field}">
+                                <ComboBox x:Name="CmbWpa" ItemsSource="{x:Static models:EnumLists.WpaModes}" SelectedItem="{Binding Wpa}" />
+                            </HeaderedContentControl>
+                            <HeaderedContentControl Header="业务 VLAN" Style="{StaticResource Field}">
+                                <TextBox Text="{Binding VlanId, UpdateSourceTrigger=PropertyChanged}" />
+                            </HeaderedContentControl>
+                            <HeaderedContentControl Header="频段" Style="{StaticResource Field}">
+                                <ComboBox ItemsSource="{x:Static models:EnumLists.RadioBands}" SelectedItem="{Binding RadioBand}" />
+                            </HeaderedContentControl>
+                            <HeaderedContentControl Header="信道" Style="{StaticResource Field}">
+                                <TextBox Text="{Binding Channel, UpdateSourceTrigger=PropertyChanged}" ToolTip="填 auto 表示自动" />
+                            </HeaderedContentControl>
+                            <HeaderedContentControl Header="发射功率 %" Style="{StaticResource Field}">
+                                <TextBox Text="{Binding Power, UpdateSourceTrigger=PropertyChanged}" />
+                            </HeaderedContentControl>
+                            <HeaderedContentControl Header="最大接入数" Style="{StaticResource Field}">
+                                <TextBox Text="{Binding MaxUsers, UpdateSourceTrigger=PropertyChanged}" />
+                            </HeaderedContentControl>
+                            <HeaderedContentControl Header="隐藏 SSID" Style="{StaticResource Field}">
+                                <CheckBox IsChecked="{Binding HideSsid}" />
+                            </HeaderedContentControl>
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
+
+                <!--SNMP -->
+                <TabItem Header="SNMP" x:Name="TabSnmp">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel x:Name="SnmpPanel" Margin="18,14,18,20">
+                            <HeaderedContentControl Header="版本" Style="{StaticResource Field}">
+                                <ComboBox x:Name="CmbSnmpVer" ItemsSource="{x:Static models:EnumLists.SnmpVersions}"
+                                          SelectedItem="{Binding Version}" SelectionChanged="CmbSnmpVer_SelectionChanged" />
+                            </HeaderedContentControl>
+                            <HeaderedContentControl Header="团体字" Style="{StaticResource Field}">
+                                <TextBox Text="{Binding Community, UpdateSourceTrigger=PropertyChanged}" />
+                            </HeaderedContentControl>
+                            <StackPanel x:Name="SnmpV3Panel" Visibility="Collapsed">
+                                <HeaderedContentControl Header="V3 用户名" Style="{StaticResource Field}">
+                                    <TextBox Text="{Binding V3User, UpdateSourceTrigger=PropertyChanged}" />
+                                </HeaderedContentControl>
+                                <HeaderedContentControl Header="认证密码" Style="{StaticResource Field}">
+                                    <TextBox Text="{Binding V3AuthPassword, UpdateSourceTrigger=PropertyChanged}" />
+                                </HeaderedContentControl>
+                                <HeaderedContentControl Header="加密密码" Style="{StaticResource Field}">
+                                    <TextBox Text="{Binding V3PrivPassword, UpdateSourceTrigger=PropertyChanged}" />
+                                </HeaderedContentControl>
+                            </StackPanel>
+                            <HeaderedContentControl Header="Trap 主机" Style="{StaticResource Field}">
+                                <TextBox Text="{Binding TrapHost, UpdateSourceTrigger=PropertyChanged}" />
+                            </HeaderedContentControl>
+                            <HeaderedContentControl Header="位置" Style="{StaticResource Field}">
+                                <TextBox Text="{Binding Location, UpdateSourceTrigger=PropertyChanged}" />
+                            </HeaderedContentControl>
+                            <HeaderedContentControl Header="联系人" Style="{StaticResource Field}">
+                                <TextBox Text="{Binding Contact, UpdateSourceTrigger=PropertyChanged}" />
+                            </HeaderedContentControl>
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
+
+                <!--SSH -->
+                <TabItem Header="SSH" x:Name="TabSsh">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel x:Name="SshPanel" Margin="18,14,18,20">
+                            <HeaderedContentControl Header="启用 SSH" Style="{StaticResource Field}">
+                                <CheckBox IsChecked="{Binding Enabled}" />
+                            </HeaderedContentControl>
+                            <HeaderedContentControl Header="SSH 版本" Style="{StaticResource Field}">
+                                <ComboBox ItemsSource="{x:Static models:EnumLists.SshVersions}" SelectedItem="{Binding Version}" />
+                            </HeaderedContentControl>
+                            <HeaderedContentControl Header="认证超时(秒)" Style="{StaticResource Field}">
+                                <TextBox Text="{Binding AuthTimeout, UpdateSourceTrigger=PropertyChanged}" />
+                            </HeaderedContentControl>
+                            <HeaderedContentControl Header="认证重试次数" Style="{StaticResource Field}">
+                                <TextBox Text="{Binding AuthRetries, UpdateSourceTrigger=PropertyChanged}" />
+                            </HeaderedContentControl>
+                            <HeaderedContentControl Header="SSH 端口" Style="{StaticResource Field}">
+                                <TextBox Text="{Binding Port, UpdateSourceTrigger=PropertyChanged}" />
+                            </HeaderedContentControl>
+                            <TextBlock Text="说明：思科 IOS 不支持直接修改 SSH 端口，该项仅在华为/华三/锐捷生效。"
+                                       TextWrapping="Wrap" Foreground="{StaticResource TextDimBrush}" FontSize="11.5" Margin="0,6,0,0" />
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
+
+                <!--安全加固 -->
+                <TabItem Header="安全加固" x:Name="TabSecurity">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel x:Name="SecurityPanel" Margin="18,14,18,20">
+                            <HeaderedContentControl Header="管理员账号" Style="{StaticResource Field}">
+                                <TextBox Text="{Binding LocalUser, UpdateSourceTrigger=PropertyChanged}" />
+                            </HeaderedContentControl>
+                            <HeaderedContentControl Header="登录密码" Style="{StaticResource Field}">
+                                <TextBox Text="{Binding Password, UpdateSourceTrigger=PropertyChanged}" />
+                            </HeaderedContentControl>
+                            <HeaderedContentControl Header="权限等级" Style="{StaticResource Field}">
+                                <TextBox Text="{Binding Privilege, UpdateSourceTrigger=PropertyChanged}" ToolTip="华为/华三/锐捷为 0-15，思科为 1-15" />
+                            </HeaderedContentControl>
+                            <HeaderedContentControl Header="Enable 密码" Style="{StaticResource Field}">
+                                <TextBox Text="{Binding EnablePassword, UpdateSourceTrigger=PropertyChanged}" ToolTip="思科 / 锐捷" />
+                            </HeaderedContentControl>
+                            <HeaderedContentControl Header="空闲超时(分)" Style="{StaticResource Field}">
+                                <TextBox Text="{Binding IdleTimeout, UpdateSourceTrigger=PropertyChanged}" />
+                            </HeaderedContentControl>
+                            <HeaderedContentControl Header="密码最小长度" Style="{StaticResource Field}">
+                                <TextBox Text="{Binding PasswordMinLength, UpdateSourceTrigger=PropertyChanged}" />
+                            </HeaderedContentControl>
+                            <HeaderedContentControl Header="登录重试次数" Style="{StaticResource Field}">
+                                <TextBox Text="{Binding LoginRetryLimit, UpdateSourceTrigger=PropertyChanged}" ToolTip="超过次数后锁定账号" />
+                            </HeaderedContentControl>
+                            <HeaderedContentControl Header="锁定时长(分)" Style="{StaticResource Field}">
+                                <TextBox Text="{Binding LockTime, UpdateSourceTrigger=PropertyChanged}" />
+                            </HeaderedContentControl>
+                            <HeaderedContentControl Header="防攻击" Style="{StaticResource Field}">
+                                <CheckBox IsChecked="{Binding AntiAttack}" />
+                            </HeaderedContentControl>
+                            <TextBlock Text="说明：登录锁定（password-control / login block-for）在华为平台需按型号手工补充，工具会给出提示。"
+                                       TextWrapping="Wrap" Foreground="{StaticResource TextDimBrush}" FontSize="11.5" Margin="0,6,0,0" />
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
+                <!-- v2：链路聚合 -->
+                <TabItem Header="链路聚合" x:Name="TabLag">
+                    <Grid Margin="14,12">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <TextBlock Text="成员接口支持空格/逗号分隔或 A to B 区间；lacp=动态 LACP，static=手工静态。"
+                                   Foreground="{StaticResource TextDimBrush}" FontSize="11.5" Margin="0,0,0,10" TextWrapping="Wrap" />
+                        <DataGrid x:Name="GridLag" Grid.Row="1" AutoGenerateColumns="False" CanUserAddRows="True">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="聚合口 ID" Binding="{Binding Id}" Width="90" />
+                                <DataGridTextColumn Header="描述" Binding="{Binding Description}" Width="130" />
+                                <DataGridComboBoxColumn Header="模式" SelectedItemBinding="{Binding Mode}"
+                                                        ItemsSource="{x:Static models:EnumLists.AggModes}" Width="85" />
+                                <DataGridTextColumn Header="成员接口" Binding="{Binding Members}" Width="*"
+                                                    ToolTipService.ToolTip="多个用空格/逗号分隔，支持 A to B 区间" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,10,0,0">
+                            <Button Content="删除选中" Style="{StaticResource IconButton}" Tag="{x:Reference GridLag}" Click="BtnDelRow_Click" />
+                            <TextBlock Text="（可直接在表格内输入新行）" Foreground="{StaticResource TextDimBrush}"
+                                       FontSize="11" Margin="10,0,0,0" />
+                        </StackPanel>
+                    </Grid>
+                </TabItem>
+
+                <!-- v2：VRRP -->
+                <TabItem Header="VRRP 冗余" x:Name="TabVrrp">
+                    <Grid Margin="14,12">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <TextBlock Text="对接主备两台设备的网关接口（如 Vlanif10 / Vlan10）；虚拟 IP 为网关地址。"
+                                   Foreground="{StaticResource TextDimBrush}" FontSize="11.5" Margin="0,0,0,10" TextWrapping="Wrap" />
+                        <DataGrid x:Name="GridVrrp" Grid.Row="1" AutoGenerateColumns="False" CanUserAddRows="True">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="接口" Binding="{Binding Interface}" Width="130" />
+                                <DataGridTextColumn Header="组号" Binding="{Binding GroupId}" Width="70" />
+                                <DataGridTextColumn Header="虚拟 IP" Binding="{Binding VirtualIp}" Width="120" />
+                                <DataGridTextColumn Header="优先级" Binding="{Binding Priority}" Width="80" />
+                                <DataGridCheckBoxColumn Header="抢占" Binding="{Binding Preempt}" Width="60" />
+                                <DataGridTextColumn Header="说明" Binding="{Binding Description}" Width="*" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,10,0,0">
+                            <Button Content="删除选中" Style="{StaticResource IconButton}" Tag="{x:Reference GridVrrp}" Click="BtnDelRow_Click" />
+                            <TextBlock Text="（可直接在表格内输入新行）" Foreground="{StaticResource TextDimBrush}"
+                                       FontSize="11" Margin="10,0,0,0" />
+                        </StackPanel>
+                    </Grid>
+                </TabItem>
+
+                <!-- v2：DHCP Snooping -->
+                <TabItem Header="DHCP Snooping" x:Name="TabDhcpSnoop">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel x:Name="DhcpSnoopPanel" Margin="18,14,18,20">
+                            <HeaderedContentControl Header="启用 VLAN" Style="{StaticResource Field}">
+                                <TextBox Text="{Binding VlanIds, UpdateSourceTrigger=PropertyChanged}"
+                                         ToolTip="多个 VLAN 用逗号分隔，支持 10-20 区间" />
+                            </HeaderedContentControl>
+                            <HeaderedContentControl Header="信任接口" Style="{StaticResource Field}">
+                                <TextBox Text="{Binding TrustPorts, UpdateSourceTrigger=PropertyChanged}"
+                                         ToolTip="连接 DHCP 服务器方向的上行口，多个用逗号分隔" />
+                            </HeaderedContentControl>
+                            <HeaderedContentControl Header="Option82" Style="{StaticResource Field}">
+                                <CheckBox IsChecked="{Binding Option82}" Content=" 插入 Option82（思科默认开启，可关）" />
+                            </HeaderedContentControl>
+                            <TextBlock Text="仅上行口（连接 DHCP 服务器方向）设为信任，其余口保持非信任以拦截私接 DHCP。"
+                                       TextWrapping="Wrap" Foreground="{StaticResource TextDimBrush}" FontSize="11.5" Margin="0,6,0,0" />
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
+
+                <!-- v2：端口镜像 -->
+                <TabItem Header="端口镜像" x:Name="TabMirror">
+                    <Grid Margin="14,12">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <TextBlock Text="源端口支持多个或 A to B 区间；目的端口为抓包/审计监听口。"
+                                   Foreground="{StaticResource TextDimBrush}" FontSize="11.5" Margin="0,0,0,10" TextWrapping="Wrap" />
+                        <DataGrid x:Name="GridMirror" Grid.Row="1" AutoGenerateColumns="False" CanUserAddRows="True">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="会话号" Binding="{Binding SessionId}" Width="80" />
+                                <DataGridTextColumn Header="源端口" Binding="{Binding SourcePorts}" Width="*" />
+                                <DataGridTextColumn Header="目的端口" Binding="{Binding DestPort}" Width="*" />
+                                <DataGridComboBoxColumn Header="方向" SelectedItemBinding="{Binding Direction}"
+                                                        ItemsSource="{x:Static models:EnumLists.MirrorDirections}" Width="100" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,10,0,0">
+                            <Button Content="删除选中" Style="{StaticResource IconButton}" Tag="{x:Reference GridMirror}" Click="BtnDelRow_Click" />
+                            <TextBlock Text="（可直接在表格内输入新行）" Foreground="{StaticResource TextDimBrush}"
+                                       FontSize="11" Margin="10,0,0,0" />
+                        </StackPanel>
+                    </Grid>
+                </TabItem>
+
+                <!-- v2：端口安全 -->
+                <TabItem Header="端口安全" x:Name="TabPortSec">
+                    <Grid Margin="14,12">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <TextBlock Text="限制接入接口允许学习的 MAC 数量，Sticky 保存已学习 MAC；违规动作 restrict/protect/shutdown。"
+                                   Foreground="{StaticResource TextDimBrush}" FontSize="11.5" Margin="0,0,0,10" TextWrapping="Wrap" />
+                        <DataGrid x:Name="GridPortSec" Grid.Row="1" AutoGenerateColumns="False" CanUserAddRows="True">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="接口" Binding="{Binding Interface}" Width="170" />
+                                <DataGridTextColumn Header="MAC 上限" Binding="{Binding MaxMac}" Width="90" />
+                                <DataGridCheckBoxColumn Header="Sticky" Binding="{Binding Sticky}" Width="65" />
+                                <DataGridComboBoxColumn Header="违规动作" SelectedItemBinding="{Binding Violation}"
+                                                        ItemsSource="{x:Static models:EnumLists.ViolationModes}" Width="100" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,10,0,0">
+                            <Button Content="删除选中" Style="{StaticResource IconButton}" Tag="{x:Reference GridPortSec}" Click="BtnDelRow_Click" />
+                            <TextBlock Text="（可直接在表格内输入新行）" Foreground="{StaticResource TextDimBrush}"
+                                       FontSize="11" Margin="10,0,0,0" />
+                        </StackPanel>
+                    </Grid>
+                </TabItem>
+
+                <!-- v2：802.1X -->
+                <TabItem Header="802.1X 认证" x:Name="TabDot1x">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel x:Name="Dot1xPanel" Margin="18,14,18,20">
+                            <HeaderedContentControl Header="启用 802.1X" Style="{StaticResource Field}">
+                                <CheckBox IsChecked="{Binding Enabled}" />
+                            </HeaderedContentControl>
+                            <HeaderedContentControl Header="RADIUS 服务器" Style="{StaticResource Field}">
+                                <TextBox Text="{Binding ServerIp, UpdateSourceTrigger=PropertyChanged}" />
+                            </HeaderedContentControl>
+                            <HeaderedContentControl Header="共享密钥" Style="{StaticResource Field}">
+                                <TextBox Text="{Binding SharedKey, UpdateSourceTrigger=PropertyChanged}" />
+                            </HeaderedContentControl>
+                            <HeaderedContentControl Header="认证端口" Style="{StaticResource Field}">
+                                <TextBox Text="{Binding AuthPort, UpdateSourceTrigger=PropertyChanged}" />
+                            </HeaderedContentControl>
+                            <HeaderedContentControl Header="计费端口" Style="{StaticResource Field}">
+                                <TextBox Text="{Binding AcctPort, UpdateSourceTrigger=PropertyChanged}" />
+                            </HeaderedContentControl>
+                            <HeaderedContentControl Header="接入接口" Style="{StaticResource Field}">
+                                <TextBox Text="{Binding Interface, UpdateSourceTrigger=PropertyChanged}"
+                                         ToolTip="留空仅下发全局认证；填接口则同时下发端口控制" />
+                            </HeaderedContentControl>
+                            <HeaderedContentControl Header="端口控制" Style="{StaticResource Field}">
+                                <ComboBox ItemsSource="{x:Static models:EnumLists.PortControls}"
+                                          SelectedItem="{Binding PortControl}" />
+                            </HeaderedContentControl>
+                            <TextBlock Text="对接 RADIUS 服务器（如 Windows NPS / FreeRADIUS / 华为 iMaster NCE），用户认证通过后放通上网。"
+                                       TextWrapping="Wrap" Foreground="{StaticResource TextDimBrush}" FontSize="11.5" Margin="0,6,0,0" />
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
+
+                <!-- v2：LLDP -->
+                <TabItem Header="LLDP 发现" x:Name="TabLldp">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel x:Name="LldpPanel" Margin="18,14,18,20">
+                            <HeaderedContentControl Header="启用 LLDP" Style="{StaticResource Field}">
+                                <CheckBox IsChecked="{Binding Enabled}" />
+                            </HeaderedContentControl>
+                            <TextBlock Text="开启后设备通过 LLDP 自动发现相邻设备与端口信息，便于拓扑梳理与链路排查。"
+                                       TextWrapping="Wrap" Foreground="{StaticResource TextDimBrush}" FontSize="11.5" Margin="0,6,0,0" />
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
+                <!-- v3：本地用户 -->
+                <TabItem Header="本地用户" x:Name="TabLocalUser">
+                    <Grid Margin="14,12">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <TextBlock Text="接入方式填 ssh / telnet / terminal / ftp（空格分隔）；不同平台对细分方式的支持不同，工具会做适配。"
+                                   Foreground="{StaticResource TextDimBrush}" FontSize="11.5" Margin="0,0,0,10" TextWrapping="Wrap" />
+                        <DataGrid x:Name="GridLocalUser" Grid.Row="1" AutoGenerateColumns="False" CanUserAddRows="True">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="用户名" Binding="{Binding Name}" Width="130" />
+                                <DataGridTextColumn Header="密码" Binding="{Binding Password}" Width="150" />
+                                <DataGridTextColumn Header="权限等级" Binding="{Binding Privilege}" Width="90" />
+                                <DataGridTextColumn Header="接入方式" Binding="{Binding Services}" Width="*" />
+                                <DataGridCheckBoxColumn Header="启用" Binding="{Binding Active}" Width="60" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,10,0,0">
+                            <Button Content="删除选中" Style="{StaticResource IconButton}" Tag="{x:Reference GridLocalUser}" Click="BtnDelRow_Click" />
+                            <TextBlock Text="（可直接在表格内输入新行）" Foreground="{StaticResource TextDimBrush}"
+                                       FontSize="11" Margin="10,0,0,0" />
+                        </StackPanel>
+                    </Grid>
+                </TabItem>
+
+                <!-- v3：Telnet -->
+                <TabItem Header="Telnet 接入" x:Name="TabTelnet">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel x:Name="TelnetPanel" Margin="18,14,18,20">
+                            <HeaderedContentControl Header="启用 Telnet" Style="{StaticResource Field}">
+                                <CheckBox IsChecked="{Binding Enabled}" />
+                            </HeaderedContentControl>
+                            <HeaderedContentControl Header="来源 ACL" Style="{StaticResource Field}">
+                                <TextBox Text="{Binding AclId, UpdateSourceTrigger=PropertyChanged}"
+                                         ToolTip="可选：限制允许 Telnet 访问的源地址（ACL 编号）" />
+                            </HeaderedContentControl>
+                            <TextBlock Text="默认关闭 Telnet（SSH 更安全）。启用后工具会按厂商生成服务开关与 VTY 配置；各平台对 SSH/Telnet 并存的语法不同，输出含相应提示。"
+                                       TextWrapping="Wrap" Foreground="{StaticResource TextDimBrush}" FontSize="11.5" Margin="0,6,0,0" />
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
+
+                <!-- v3：Web 管理 -->
+                <TabItem Header="Web 管理" x:Name="TabWeb">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel x:Name="WebAdminPanel" Margin="18,14,18,20">
+                            <HeaderedContentControl Header="启用 HTTP" Style="{StaticResource Field}">
+                                <CheckBox IsChecked="{Binding HttpEnabled}" />
+                            </HeaderedContentControl>
+                            <HeaderedContentControl Header="启用 HTTPS" Style="{StaticResource Field}">
+                                <CheckBox IsChecked="{Binding HttpsEnabled}" />
+                            </HeaderedContentControl>
+                            <HeaderedContentControl Header="端口(可选)" Style="{StaticResource Field}">
+                                <TextBox Text="{Binding Port, UpdateSourceTrigger=PropertyChanged}" ToolTip="留空使用默认端口；部分平台改端口命令差异大" />
+                            </HeaderedContentControl>
+                            <HeaderedContentControl Header="来源限制" Style="{StaticResource Field}">
+                                <TextBox Text="{Binding AllowSource, UpdateSourceTrigger=PropertyChanged}"
+                                         ToolTip="可选：限制可访问 Web 管理的源地址/网段说明" />
+                            </HeaderedContentControl>
+                            <TextBlock Text="Web 登录复用本地用户账号，请勾选「本地用户 / 安全加固」并修改默认口令；https 需要证书/SSL 策略配合。"
+                                       TextWrapping="Wrap" Foreground="{StaticResource TextDimBrush}" FontSize="11.5" Margin="0,6,0,0" />
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
+                <!-- v6：端口映射 -->
+                <TabItem Header="端口映射" x:Name="TabPortMap">
+                    <Grid Margin="14,12">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <TextBlock Text="NAT Server：把公网端口发布到内网服务器（支持多条）。公网 IP 留空表示使用接口地址。"
+                                   Foreground="{StaticResource TextDimBrush}" FontSize="11.5" Margin="0,0,0,10" TextWrapping="Wrap" />
+                        <DataGrid x:Name="GridPortMap" Grid.Row="1" AutoGenerateColumns="False" CanUserAddRows="True">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="名称" Binding="{Binding Name}" Width="110" />
+                                <DataGridComboBoxColumn Header="协议" SelectedItemBinding="{Binding Protocol}"
+                                                        ItemsSource="{x:Static models:EnumLists.Protocols}" Width="70" />
+                                <DataGridTextColumn Header="公网 IP" Binding="{Binding ExternalIp}" Width="120" />
+                                <DataGridTextColumn Header="公网端口" Binding="{Binding ExternalPort}" Width="90" />
+                                <DataGridTextColumn Header="内网服务器" Binding="{Binding InsideIp}" Width="*" />
+                                <DataGridTextColumn Header="内网端口" Binding="{Binding InsidePort}" Width="90" />
+                                <DataGridTextColumn Header="说明" Binding="{Binding Description}" Width="110" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,10,0,0">
+                            <Button Content="删除选中" Style="{StaticResource IconButton}" Tag="{x:Reference GridPortMap}" Click="BtnDelRow_Click" />
+                            <TextBlock Text="（可直接在表格内输入新行）" Foreground="{StaticResource TextDimBrush}"
+                                       FontSize="11" Margin="10,0,0,0" />
+                        </StackPanel>
+                    </Grid>
+                </TabItem>
+
+                <!-- v6：NAT 静态一对一 -->
+                <TabItem Header="NAT 静态一对一" x:Name="TabStaticNat">
+                    <Grid Margin="14,12">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <TextBlock Text="把公网 IP 一对一映射到内网服务器（每行一对）。"
+                                   Foreground="{StaticResource TextDimBrush}" FontSize="11.5" Margin="0,0,0,10" TextWrapping="Wrap" />
+                        <DataGrid x:Name="GridStaticNat" Grid.Row="1" AutoGenerateColumns="False" CanUserAddRows="True">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="公网 IP" Binding="{Binding GlobalIp}" Width="150" />
+                                <DataGridTextColumn Header="内网 IP" Binding="{Binding InsideIp}" Width="*" />
+                                <DataGridTextColumn Header="说明" Binding="{Binding Description}" Width="*" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,10,0,0">
+                            <Button Content="删除选中" Style="{StaticResource IconButton}" Tag="{x:Reference GridStaticNat}" Click="BtnDelRow_Click" />
+                            <TextBlock Text="（可直接在表格内输入新行）" Foreground="{StaticResource TextDimBrush}"
+                                       FontSize="11" Margin="10,0,0,0" />
+                        </StackPanel>
+                    </Grid>
+                </TabItem>
+
+                <!-- v6：DHCP 中继 -->
+                <TabItem Header="DHCP 中继" x:Name="TabDhcpRelay">
+                    <Grid Margin="14,12">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <TextBlock Text="把终端所在网段（VLANIF/三层口）的 DHCP 请求转发给远端服务器。"
+                                   Foreground="{StaticResource TextDimBrush}" FontSize="11.5" Margin="0,0,0,10" TextWrapping="Wrap" />
+                        <DataGrid x:Name="GridDhcpRelay" Grid.Row="1" AutoGenerateColumns="False" CanUserAddRows="True">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="接口" Binding="{Binding Interface}" Width="*" />
+                                <DataGridTextColumn Header="DHCP 服务器" Binding="{Binding ServerIp}" Width="*" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,10,0,0">
+                            <Button Content="删除选中" Style="{StaticResource IconButton}" Tag="{x:Reference GridDhcpRelay}" Click="BtnDelRow_Click" />
+                            <TextBlock Text="（可直接在表格内输入新行）" Foreground="{StaticResource TextDimBrush}"
+                                       FontSize="11" Margin="10,0,0,0" />
+                        </StackPanel>
+                    </Grid>
+                </TabItem>
+
+                <!-- v6：DHCP 静态绑定 -->
+                <TabItem Header="DHCP 静态绑定" x:Name="TabDhcpBind">
+                    <Grid Margin="14,12">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <TextBlock Text="在地址池内按 MAC 固定分配 IP（防私改 IP、便于审计）。"
+                                   Foreground="{StaticResource TextDimBrush}" FontSize="11.5" Margin="0,0,0,10" TextWrapping="Wrap" />
+                        <DataGrid x:Name="GridDhcpBind" Grid.Row="1" AutoGenerateColumns="False" CanUserAddRows="True">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="地址池" Binding="{Binding Pool}" Width="110" />
+                                <DataGridTextColumn Header="MAC" Binding="{Binding Mac}" Width="160" />
+                                <DataGridTextColumn Header="固定 IP" Binding="{Binding Ip}" Width="120" />
+                                <DataGridTextColumn Header="掩码" Binding="{Binding Mask}" Width="130" />
+                                <DataGridTextColumn Header="说明" Binding="{Binding Description}" Width="*" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,10,0,0">
+                            <Button Content="删除选中" Style="{StaticResource IconButton}" Tag="{x:Reference GridDhcpBind}" Click="BtnDelRow_Click" />
+                            <TextBlock Text="（MAC 支持 : - . 分隔任意写法，生成时自动归一）" Foreground="{StaticResource TextDimBrush}"
+                                       FontSize="11" Margin="10,0,0,0" />
+                        </StackPanel>
+                    </Grid>
+                </TabItem>
+
+                <!-- v6：IP-MAC 绑定 -->
+                <TabItem Header="IP-MAC 绑定" x:Name="TabArpBind">
+                    <Grid Margin="14,12">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <TextBlock Text="ARP 静态绑定防 IP 欺骗；思科/锐捷建议填接口（三层口），华为/华三留空即全局。"
+                                   Foreground="{StaticResource TextDimBrush}" FontSize="11.5" Margin="0,0,0,10" TextWrapping="Wrap" />
+                        <DataGrid x:Name="GridArpBind" Grid.Row="1" AutoGenerateColumns="False" CanUserAddRows="True">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="IP" Binding="{Binding Ip}" Width="140" />
+                                <DataGridTextColumn Header="MAC" Binding="{Binding Mac}" Width="170" />
+                                <DataGridTextColumn Header="接口(可选)" Binding="{Binding Interface}" Width="150" />
+                                <DataGridTextColumn Header="说明" Binding="{Binding Description}" Width="*" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,10,0,0">
+                            <Button Content="删除选中" Style="{StaticResource IconButton}" Tag="{x:Reference GridArpBind}" Click="BtnDelRow_Click" />
+                            <TextBlock Text="（可直接在表格内输入新行）" Foreground="{StaticResource TextDimBrush}"
+                                       FontSize="11" Margin="10,0,0,0" />
+                        </StackPanel>
+                    </Grid>
+                </TabItem>
+
+                <!-- v6：风暴抑制 -->
+                <TabItem Header="风暴抑制" x:Name="TabStorm">
+                    <Grid Margin="14,12">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <TextBlock Text="按接口限制广播/组播/未知单播风暴（百分比，留空不限制）。"
+                                   Foreground="{StaticResource TextDimBrush}" FontSize="11.5" Margin="0,0,0,10" TextWrapping="Wrap" />
+                        <DataGrid x:Name="GridStorm" Grid.Row="1" AutoGenerateColumns="False" CanUserAddRows="True">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="接口" Binding="{Binding Interface}" Width="*" />
+                                <DataGridTextColumn Header="广播%" Binding="{Binding BroadcastPct}" Width="100" />
+                                <DataGridTextColumn Header="组播%" Binding="{Binding MulticastPct}" Width="100" />
+                                <DataGridTextColumn Header="未知单播%" Binding="{Binding UnknownUcPct}" Width="110" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,10,0,0">
+                            <Button Content="删除选中" Style="{StaticResource IconButton}" Tag="{x:Reference GridStorm}" Click="BtnDelRow_Click" />
+                            <TextBlock Text="（可直接在表格内输入新行）" Foreground="{StaticResource TextDimBrush}"
+                                       FontSize="11" Margin="10,0,0,0" />
+                        </StackPanel>
+                    </Grid>
+                </TabItem>
+
+                <!-- v6：IGMP Snooping -->
+                <TabItem Header="IGMP Snooping" x:Name="TabIgmp">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel x:Name="IgmpPanel" Margin="18,14,18,20">
+                            <HeaderedContentControl Header="启用 IGMP Snooping" Style="{StaticResource Field}">
+                                <CheckBox IsChecked="{Binding Enabled}" />
+                            </HeaderedContentControl>
+                            <HeaderedContentControl Header="VLAN 列表" Style="{StaticResource Field}">
+                                <TextBox Text="{Binding VlanIds, UpdateSourceTrigger=PropertyChanged}"
+                                         ToolTip="多个 VLAN 用逗号分隔，支持 10-20 区间；留空则只开全局" />
+                            </HeaderedContentControl>
+                            <TextBlock Text="开启后二层交换机只在有组播接收者的端口转发组播流量，节省带宽。"
+                                       TextWrapping="Wrap" Foreground="{StaticResource TextDimBrush}" FontSize="11.5" Margin="0,6,0,0" />
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
+
+                <!-- v12：ACL 时间段 -->
+                <TabItem Header="ACL 时间段" x:Name="TabTimeRange">
+                    <Grid Margin="14,12">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <TextBlock Text="定义生效时间段供「ACL 策略」引用（规则表格里的“时间段”列填名称即可）。日期列取值：daily=每天 / working-day=周一至周五 / off-day=周末。"
+                                   Foreground="{StaticResource TextDimBrush}" FontSize="11.5" Margin="0,0,0,10" TextWrapping="Wrap" />
+                        <DataGrid x:Name="GridTimeRange" Grid.Row="1" AutoGenerateColumns="False" CanUserAddRows="True">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="名称" Binding="{Binding Name}" Width="140" />
+                                <DataGridTextColumn Header="日期" Binding="{Binding Days}" Width="120" />
+                                <DataGridTextColumn Header="开始" Binding="{Binding StartTime}" Width="90" />
+                                <DataGridTextColumn Header="结束" Binding="{Binding EndTime}" Width="90" />
+                                <DataGridTextColumn Header="描述" Binding="{Binding Description}" Width="*" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,10,0,0">
+                            <Button Content="删除选中" Style="{StaticResource IconButton}" Tag="{x:Reference GridTimeRange}" Click="BtnDelRow_Click" />
+                            <TextBlock Text="（可直接在表格内输入新行）" Foreground="{StaticResource TextDimBrush}"
+                                       FontSize="11" Margin="10,0,0,0" />
+                        </StackPanel>
+                    </Grid>
+                </TabItem>
+
+                <!-- v12：BFD 检测 -->
+                <TabItem Header="BFD 检测" x:Name="TabBfd">
+                    <Grid Margin="14,12">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <TextBlock Text="毫秒级链路故障检测（需对端设备配合）。本端接口填三层口/VLANIF；对端设备的本地/远端标识需与本端互换。间隔与倍数可按需调整（如 100ms×3）。"
+                                   Foreground="{StaticResource TextDimBrush}" FontSize="11.5" Margin="0,0,0,10" TextWrapping="Wrap" />
+                        <DataGrid x:Name="GridBfd" Grid.Row="1" AutoGenerateColumns="False" CanUserAddRows="True">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="对端 IP" Binding="{Binding PeerIp}" Width="140" />
+                                <DataGridTextColumn Header="本端接口" Binding="{Binding Interface}" Width="150" />
+                                <DataGridTextColumn Header="间隔(ms)" Binding="{Binding MinTxMs}" Width="100" />
+                                <DataGridTextColumn Header="倍数" Binding="{Binding Multiplier}" Width="70" />
+                                <DataGridTextColumn Header="描述" Binding="{Binding Description}" Width="*" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,10,0,0">
+                            <Button Content="删除选中" Style="{StaticResource IconButton}" Tag="{x:Reference GridBfd}" Click="BtnDelRow_Click" />
+                            <TextBlock Text="（可直接在表格内输入新行）" Foreground="{StaticResource TextDimBrush}"
+                                       FontSize="11" Margin="10,0,0,0" />
+                        </StackPanel>
+                    </Grid>
+                </TabItem>
+
+                <!-- v12：PoE 供电 -->
+                <TabItem Header="PoE 供电" x:Name="TabPoe">
+                    <Grid Margin="14,12">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <TextBlock Text="交换机为下联 AP/摄像头/面板供电。供电列勾选=开（华为/华三 poe enable、思科 power inline auto），取消=关；优先级列填 critical/high/low（思科忽略优先级并提示）。"
+                                   Foreground="{StaticResource TextDimBrush}" FontSize="11.5" Margin="0,0,0,10" TextWrapping="Wrap" />
+                        <DataGrid x:Name="GridPoe" Grid.Row="1" AutoGenerateColumns="False" CanUserAddRows="True">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="接口" Binding="{Binding Interface}" Width="*" />
+                                <DataGridCheckBoxColumn Header="供电" Binding="{Binding Enabled}" Width="80" />
+                                <DataGridTextColumn Header="优先级" Binding="{Binding Priority}" Width="110" />
+                                <DataGridTextColumn Header="描述" Binding="{Binding Description}" Width="180" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,10,0,0">
+                            <Button Content="删除选中" Style="{StaticResource IconButton}" Tag="{x:Reference GridPoe}" Click="BtnDelRow_Click" />
+                            <TextBlock Text="（可直接在表格内输入新行）" Foreground="{StaticResource TextDimBrush}"
+                                       FontSize="11" Margin="10,0,0,0" />
+                        </StackPanel>
+                    </Grid>
+                </TabItem>
+
+                <!-- v13：IPv6 基础 -->
+                <TabItem Header="IPv6 基础" x:Name="TabIpv6">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel x:Name="Ipv6Panel" Margin="18,14,18,20">
+                            <HeaderedContentControl Header="启用 IPv6 配置" Style="{StaticResource Field}">
+                                <CheckBox IsChecked="{Binding Enabled}" />
+                            </HeaderedContentControl>
+                            <HeaderedContentControl Header="三层接口" Style="{StaticResource Field}"
+                                ToolTip="华为/华三填 Vlanif10，思科/锐捷填 Vlan10（生成时自动转换）">
+                                <TextBox Text="{Binding Interface, UpdateSourceTrigger=PropertyChanged}" />
+                            </HeaderedContentControl>
+                            <HeaderedContentControl Header="IPv6 地址/前缀" Style="{StaticResource Field}"
+                                ToolTip="必须含前缀长度，如 2001:db8:10::1/64；缺前缀会跳过并提示">
+                                <TextBox Text="{Binding Address, UpdateSourceTrigger=PropertyChanged}" />
+                            </HeaderedContentControl>
+                            <HeaderedContentControl Header="发送 RA 路由通告" Style="{StaticResource Field}"
+                                ToolTip="勾选=终端可自动获取 IPv6 地址与网关（华为/华三 undo ipv6 nd ra halt）">
+                                <CheckBox IsChecked="{Binding NdRa}" />
+                            </HeaderedContentControl>
+                            <TextBlock Text="适用于 IPv6 试点或过渡场景。生产启用前请确认上游已分配前缀、放通 ICMPv6（协议 58），防火墙同步调整策略。"
+                                       TextWrapping="Wrap" Foreground="{StaticResource TextDimBrush}" FontSize="11.5" Margin="0,6,0,0" />
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
+
+                <!-- v13：GRE 隧道 -->
+                <TabItem Header="GRE 隧道" x:Name="TabGre">
+                    <Grid Margin="14,12">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <TextBlock Text="两站点内网经公网轻量互通（不加密）。本端/对端填公网地址，隧道地址填私网互联地址（默认 /30）。华为/华三隧道名 Tunnel0/0/1，思科/锐捷 Tunnel0（生成时自动去槽位）。"
+                                   Foreground="{StaticResource TextDimBrush}" FontSize="11.5" Margin="0,0,0,10" TextWrapping="Wrap" />
+                        <DataGrid x:Name="GridGre" Grid.Row="1" AutoGenerateColumns="False" CanUserAddRows="True">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="隧道接口" Binding="{Binding Name}" Width="120" />
+                                <DataGridTextColumn Header="本端公网" Binding="{Binding Source}" Width="130" />
+                                <DataGridTextColumn Header="对端公网" Binding="{Binding Destination}" Width="130" />
+                                <DataGridTextColumn Header="隧道地址" Binding="{Binding Address}" Width="120" />
+                                <DataGridTextColumn Header="掩码" Binding="{Binding Mask}" Width="120" />
+                                <DataGridTextColumn Header="描述" Binding="{Binding Description}" Width="*" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,10,0,0">
+                            <Button Content="删除选中" Style="{StaticResource IconButton}" Tag="{x:Reference GridGre}" Click="BtnDelRow_Click" />
+                            <TextBlock Text="（可直接在表格内输入新行）" Foreground="{StaticResource TextDimBrush}"
+                                       FontSize="11" Margin="10,0,0,0" />
+                        </StackPanel>
+                    </Grid>
+                </TabItem>
+
+                <!-- v13：语音 VLAN -->
+                <TabItem Header="语音 VLAN" x:Name="TabVoice">
+                    <Grid Margin="14,12">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <TextBlock Text="IP 话机与电脑共用同一个接入口：数据走数据 VLAN（PVID），语音走语音 VLAN。端口列填接口名，支持 GE0/0/1 to GE0/0/12 区间写法（华为/华三）；思科/锐捷填 Gi1/0/1 to Gi1/0/12 亦可。"
+                                   Foreground="{StaticResource TextDimBrush}" FontSize="11.5" Margin="0,0,0,10" TextWrapping="Wrap" />
+                        <DataGrid x:Name="GridVoice" Grid.Row="1" AutoGenerateColumns="False" CanUserAddRows="True">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="数据 VLAN" Binding="{Binding DataVlan}" Width="90" />
+                                <DataGridTextColumn Header="语音 VLAN" Binding="{Binding VoiceVlan}" Width="90" />
+                                <DataGridTextColumn Header="话机端口" Binding="{Binding Ports}" Width="*" />
+                                <DataGridTextColumn Header="描述" Binding="{Binding Description}" Width="150" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,10,0,0">
+                            <Button Content="删除选中" Style="{StaticResource IconButton}" Tag="{x:Reference GridVoice}" Click="BtnDelRow_Click" />
+                            <TextBlock Text="（可直接在表格内输入新行）" Foreground="{StaticResource TextDimBrush}"
+                                       FontSize="11" Margin="10,0,0,0" />
+                        </StackPanel>
+                    </Grid>
+                </TabItem>
+
+                <!-- v13：端口隔离 -->
+                <TabItem Header="端口隔离" x:Name="TabIsolate">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel x:Name="IsolatePanel" Margin="18,14,18,20">
+                            <HeaderedContentControl Header="启用端口隔离" Style="{StaticResource Field}">
+                                <CheckBox IsChecked="{Binding Enabled}" />
+                            </HeaderedContentControl>
+                            <HeaderedContentControl Header="隔离组号" Style="{StaticResource Field}"
+                                ToolTip="华为/华三用组号（1-64）；思科/锐捷为全局 protected，忽略此值">
+                                <TextBox Text="{Binding GroupId, UpdateSourceTrigger=PropertyChanged}" />
+                            </HeaderedContentControl>
+                            <HeaderedContentControl Header="隔离端口" Style="{StaticResource Field}"
+                                ToolTip="接口名列表，支持 GE0/0/1 to GE0/0/12 区间；这些口二层互不通">
+                                <TextBox Text="{Binding Ports, UpdateSourceTrigger=PropertyChanged}" />
+                            </HeaderedContentControl>
+                            <HeaderedContentControl Header="免隔离上联口" Style="{StaticResource Field}"
+                                ToolTip="填上联口名仅作提醒（不进组即天然互通），可留空">
+                                <TextBox Text="{Binding Uplink, UpdateSourceTrigger=PropertyChanged}" />
+                            </HeaderedContentControl>
+                            <TextBlock Text="同隔离组内端口互相不通、但都能访问上联口——适合会议室、培训室、访客网络等“只出不进”的场景。"
+                                       TextWrapping="Wrap" Foreground="{StaticResource TextDimBrush}" FontSize="11.5" Margin="0,6,0,0" />
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
+            </TabControl>
+        </Border>
+
+        <!-- ========================= 右栏：配置输出 ========================= -->
+        <Grid Grid.Column="2" Background="{StaticResource SideBgBrush}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <Border Padding="14,12" Background="{StaticResource PanelBgBrush}"
+                    BorderThickness="0,0,0,1" BorderBrush="{StaticResource BorderBrush}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <TextBlock Text="生成的配置" FontSize="13" FontWeight="SemiBold"
+                                   Foreground="{StaticResource AccentCyanBrush}" />
+                        <TextBlock x:Name="TxtOutputStat" Text="0 行 · 0 字符" FontSize="11"
+                                   Foreground="{StaticResource TextDimBrush}" Margin="0,3,0,0" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal">
+                        <Button Content="生成配置" Style="{StaticResource PrimaryButton}" Click="BtnGenerate_Click" />
+                        <Button Content="复制" Style="{StaticResource IconButton}" Margin="8,0,0,0" Click="BtnCopy_Click"
+                                ToolTip="复制纯命令（已去掉 # / ! 注释与分隔线），可直接粘贴到设备终端执行" />
+                        <Button Content="导出" Style="{StaticResource IconButton}" Margin="6,0,0,0" Click="BtnExport_Click"
+                                ToolTip="导出完整文本（含注释说明），适合离线存档或阅读；粘贴设备请用“复制”" />
+                        <Button Content="批量…" Style="{StaticResource IconButton}" Margin="6,0,0,0" Click="BtnBulk_Click"
+                                ToolTip="按名称前缀+起始管理 IP 递增批量生成多份同类设备配置（纯命令 .cfg）" />
+                        <Button Content="存为版本" Style="{StaticResource IconButton}" Margin="6,0,0,0" Click="BtnSaveVersion_Click" />
+                        <Button Content="存为模板" Style="{StaticResource IconButton}" Margin="6,0,0,0" Click="BtnSaveTemplate_Click" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <RichTextBox x:Name="OutputBox" Grid.Row="1" BorderThickness="0" Padding="8,8,8,8"
+                         Background="{StaticResource OutputBgBrush}" />
+        </Grid>
+    </Grid>
+</UserControl>
